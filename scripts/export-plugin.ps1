@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 param(
-    [string]$BuildDirectory = "out/windows-x64",
+    [string]$BuildDirectory = "out/windows-2026-x64",
     [string]$Configuration = "Release"
 )
 

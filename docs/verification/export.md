@@ -2,7 +2,14 @@
 
 **Status: Exportweg angelegt, noch kein Windows-Artefakt erzeugt.**
 
-Nach erfolgreichem Windows-x86-64-Build mit aktivierten Tests:
+Nach erfolgreichem Windows-x86-64-Build mit aktivierten Tests. Der Standard
+ist der alternative VS-2026/Ninja-Buildordner:
+
+```powershell
+./scripts/export-plugin.ps1
+```
+
+Fuer den Visual-Studio-2022-Preset den Ordner explizit angeben:
 
 ```powershell
 ./scripts/export-plugin.ps1 -BuildDirectory out/windows-x64
@@ -14,7 +21,7 @@ und laedt es erneut im VST3-Testhost. Bundle und innere Windows-Binaerdatei
 werden konsistent umbenannt; nur den aeusseren Ordner umzubenennen reicht nicht.
 Ein vorhandener Export wird nicht still ueberschrieben oder geloescht.
 Bei Fehlern ist ein eventuell teilweise kopiertes Bundle kein gueltiger Export.
-Das Skript ist hier nicht unter Windows ausgefuehrt worden.
+Der VS-2026/Ninja-Exportweg ist hier nicht unter Windows ausgefuehrt worden.
 
 ## Download ueber GitHub
 

@@ -37,10 +37,38 @@ cmake --build --preset windows-x64
 ctest --preset windows-x64
 ```
 
-Das Bundle liegt anschliessend unter
-`out/windows-x64/SpectralDecay_artefacts/Release/VST3/Spectral Decay Neutral.vst3`.
+Alternativ mit Visual Studio 2026 und Ninja (dieser Weg ist fuer dieses
+Projekt noch nicht verifiziert): Visual Studio 2026 braucht die Workload
+**Desktopentwicklung mit C++** samt Windows SDK; Ninja muss installiert und
+im `PATH` sein. CMake 3.31 kennt den Visual-Studio-2026-Generator nicht.
+Deshalb eine **x64 Native Tools Command Prompt for VS 2026** oeffnen und mit
+`where cl` sicherstellen, dass der Compiler auf x64 zielt (z. B.
+`Hostx64\x64\cl.exe`). Das `windows-x64`-Preset nicht fuer diesen Weg
+verwenden, da es Visual Studio 2022 auswaehlt:
+
+```cmd
+cmake -S . -B out/windows-2026-x64 -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DSPECTRAL_DECAY_BUILD_PLUGIN=ON
+cmake --build out/windows-2026-x64 --parallel 2
+ctest --test-dir out/windows-2026-x64 --output-on-failure
+```
+
+Das Bundle liegt beim VS-2022-Preset unter
+`out/windows-x64/SpectralDecay_artefacts/Release/VST3/Spectral Decay Neutral.vst3`,
+beim VS-2026/Ninja-Weg unter
+`out/windows-2026-x64/SpectralDecay_artefacts/Release/VST3/Spectral Decay Neutral.vst3`.
 Keine automatische Installation. Details und manueller Live-Test:
 [Windows/Ableton-Test](docs/verification/windows-ableton.md).
+
+Nach erfolgreichem Build und Test kann das Bundle aus PowerShell im
+Repository-Verzeichnis exportiert werden:
+
+```powershell
+./scripts/export-plugin.ps1
+```
+
+Das Skript verwendet standardmaessig `out/windows-2026-x64`; fuer den
+VS-2022-Preset den Build-Ordner mit
+`-BuildDirectory out/windows-x64` angeben.
 
 Der [Windows-Exportweg](docs/verification/export.md) erzeugt nach erfolgreichen
 Tests `plugin-export/spectral-decay.vst3`. Nach einem bewussten Commit/Push
