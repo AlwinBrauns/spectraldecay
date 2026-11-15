@@ -54,7 +54,8 @@ erfuellt sind, **nicht**, dass offene Neutralitaetstoleranzen abgenommen wurden.
    separat bestaetigen; dieses Projekt kopiert dorthin nichts automatisch.
 3. VST3-Scan aktivieren, scannen und `Spectral Decay Neutral` laden
    (exportierter Bundle-Dateiname: `spectral-decay.vst3`).
-   Der JUCE-Standardeditor bietet `Tail amount` und `Tail mode`.
+   Der JUCE-Standardeditor bietet `Tail amount`, `Tail mode` und
+   `Low frequency` / `High frequency` in Hz.
    Nach einem neuen Build das aktualisierte Bundle verwenden und in Live
    bei Bedarf erneut scannen.
 4. Bei 44,1 und 48 kHz bekannte Impulse, Sweep und Rauschburst durchleiten.
@@ -69,9 +70,10 @@ erfuellt sind, **nicht**, dass offene Neutralitaetstoleranzen abgenommen wurden.
    werden. Fuer den samplegenauen Roh-Latenznachweis den obigen Test-Host
    verwenden; eine gerundete Millisekundenanzeige in Live reicht nicht.
 7. Audioausgabe, Dropouts/Fehler und Hoereindruck protokollieren. Mit
-   Regler 0 neutral vergleichen; dann einen kurzen tonalen Klang bzw.
-   Rauschklang mit Anteilen von 500 bis 1500 Hz gefolgt von Stille abspielen
-   und mit erhoehtem Tail-Regler und passendem Modus testen. Kein Hoertest
+   Regler 0 neutral vergleichen; dann einen abklingenden tonalen Klang bzw.
+   Rauschklang im ausgewaehlten Band abspielen und mit erhoehtem Tail-Regler
+   und passendem Modus testen. Auch bei laufendem Signal ausserhalb des
+   Bandes vergleichen. Kein Hoertest
    ersetzt den Nulltest. Der Versuch bietet keine Verkuerzung, keinen
    Kurveneditor, kein Dry/Wet, keinen eigenen Bypass und keinen
    True-Peak-Schutz. Einen Tail-Modus vor dem Abspielen einstellen; ein

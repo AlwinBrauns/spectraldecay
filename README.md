@@ -12,21 +12,24 @@ Hoertests den Abhoerpegel reduzieren.
 Nach einem neuen Build das Plugin `Spectral Decay Neutral` in der DAW erneut
 laden und das Plugin-Fenster oeffnen. Der Standardeditor bietet:
 
-- **Tail amount:** Staerke des experimentellen Nachklangs zwischen 500 und
-  1500 Hz; 0 ist neutral. Fuer den ersten Versuch den Regler auf 1 stellen.
+- **Tail amount:** Staerke des experimentellen Nachklangs; 0 ist neutral.
+  Fuer den ersten Versuch den Regler auf 1 stellen.
 - **Tail mode:** `Tonal` fuer einen tonalen Klang oder `Noise` fuer einen
   rauschhaften Klang. Vor dem Abspielen einstellen: Ein bereits abgeklungener
   Klang wird nicht nachtraeglich verlaengert.
+- **Low frequency / High frequency:** Untere und obere Grenze des
+  bearbeiteten Bandes in Hz. Standard: 500 bis 1500 Hz. Der Bereich ist
+  zwischen 40 und 16000 Hz waehlbar; vertauschte Grenzen werden sortiert.
 
-Einen kurzen Klang mit Anteilen zwischen 500 und 1500 Hz abspielen und
-anschliessend Stille lassen. Der Versuch ergaenzt erst nach erkannter Stille
-einen abklingenden Nachklang in diesem festen Frequenzbereich. Als
-experimentelle Stilleerkennung gelten 10 ms unter -60 dBFS Sample-Peak;
-der Nachklang endet spaetestens zwei Sekunden nach der letzten erkannten
-Anregung (bezogen auf die latenzkompensierte Zeitachse). Er formt
-keine frei einstellbare Frequenzkurve und unterscheidet tonale und
-rauschhafte Anteile nicht automatisch. Bei bereits sehr leise ausgeklungenen
-Signalen kann auch der hinzugefuegte Nachklang sehr leise sein.
+Zum Vergleich einen abklingenden Klang mit Anteilen im ausgewaehlten Bereich
+abspielen und `Tail amount` zwischen 0 und 1 vergleichen. Der Versuch
+verlaengert abfallende Signalanteile im Band, auch wenn anderes Audiomaterial
+weiterlaeuft. Er formt keine frei einstellbare Frequenzkurve und
+unterscheidet tonale und rauschhafte Anteile nicht automatisch. Die
+experimentelle spektrale Huellkurve klingt mit einer Zeitkonstante von
+400 ms ab. Die zusaetzliche Energie pro Frequenzbin wird spaetestens zwei
+Sekunden nach dem letzten erkannten Signal in diesem Bin beendet; die
+Erkennungsschwelle ist eine Versuchsannahme.
 Die Einstellungen werden im Plugin-Zustand gespeichert. Eine einfache
 Sample-Peak-Begrenzung ist nur bei
 hinzugefuegtem Tail aktiv und kein True-Peak-Schutz; laute Eingangssignale
@@ -35,15 +38,16 @@ DAW-Kompatibilitaet sind nicht abgenommen.
 
 Grundlage ist der [vorgeschlagene Verlaengerungsversuch](docs/adr/0004-erster-verlaengerungsprototyp.md).
 Anders als in dessen urspruenglichem Offline-Zuschnitt ist diese Erweiterung
-bereits im Plugin bedienbar; die Stilleerkennung ist eine Versuchsannahme.
+bereits im Plugin bedienbar und verfolgt abfallende Bandanteile statt erst
+bei Vollbandstille einzusetzen.
 
 ## Aufbau
 
 - Plattformunabhaengiger DSP-Kern: FFT 2048, Hop 512, sqrt(periodische Hann),
-  normiertes WOLA, immer FFT und inverse FFT; gemeinsamer Stereo-Ausloeser
-  und Synthese pro Kanal.
+  normiertes WOLA, immer FFT und inverse FFT; stereogekoppelte
+  Band-Huellkurven und Synthese pro Kanal.
 - JUCE-Huelle: Mono-/Stereo-Busse, Sample-Latenzmeldung, generischer Editor
-  und zwei gespeicherte Versuchsparameter.
+  und vier gespeicherte Versuchsparameter.
 - Deterministische Offline-Messungen, direkte Processor-Tests und ein kleiner
   Host, der das tatsaechliche VST3-Modul laedt.
 
@@ -133,19 +137,30 @@ groesster Nullrest-Peak **-127,59 dBFS**, groesster Nullrest-RMS
 Diese Messwerte sind keine Abnahme offener Klangtoleranzen.
 Einzelheiten zum neutralen Build: [Pruefprotokoll](docs/verification/neutral-prototype.md).
 
-**Erweiterung:** Linux-Build und 3/3 CTest-Programme erfolgreich;
+**Vorherige Erweiterung:** Linux-Build und 3/3 CTest-Programme erfolgreich;
 1914 Strukturchecks und 4180 Messzeilen im Offline-Lauf. Tonale und
 rauschhafte Testbursts erzeugten einen Tail, auch bei 10 ms Burstlaenge.
-Die offenen Klangtoleranzen sind damit nicht abgenommen. Der Nutzer
-berichtet, dass der neutrale Prototyp unter Windows gebaut wurde und das
-Plugin laedt; ein dokumentierter Windows-/Ableton-Test der Erweiterung
-steht noch aus.
+Der Nutzer berichtet, dass der erweiterte Prototyp unter Windows laedt,
+aber bei seinem Material keine Wirkung zeigte.
+
+**Frequenzwahl und Korrektur:** Linux-Build und 3/3 CTest-Programme
+erfolgreich; 2350 Strukturchecks und 4500 Messzeilen im Offline-Lauf.
+Bei 48 kHz, Blockgroesse 257 und einem abklingenden 1-kHz-Ton mit
+gleichzeitigem 8-kHz-Dauerton ist bei `Tail amount` 1 gegenueber 0 ein
+Unterschied messbar; beim bisherigen Stand war er im Testfenster exakt 0.
+Geprueft wurden auch zwei Sampleraten, vier Blockgroessen, beide Modi,
+Stereo, Zustandsuebernahme und das geladene VST3-Modul. Die offenen
+Klangtoleranzen sind damit nicht abgenommen. Windows-/Ableton- und
+Hoertest des neuen Stands stehen aus.
 
 Eine stichprobenartige lokale Stereo-Callback-Messung mit aktivem Tail
 ueberschritt bei 44,1 kHz und 64 Samples einmal das Blockzeitbudget: 4,13 ms
-gegenueber 1,45 ms. Die Messung lief in einer geteilten Umgebung und trennt
-DSP-Kosten nicht von Betriebssystemunterbrechungen; Aussetzer koennen daher
-nicht ausgeschlossen werden. Ein Echtzeit- oder CPU-Grenznachweis fehlt.
+gegenueber 1,45 ms (vorherige Erweiterung). Im aktuellen Stand wurden bei
+48 kHz, 64 Samples, Stereo und aktivem Band 40-16000 Hz bei einem
+abklingenden Rauschsignal maximal 0,208 ms CPU-Zeit pro Block gemessen;
+das Budget betraegt 1,333 ms. Beide Messungen sind Stichproben auf Linux in
+einer geteilten Umgebung; Aussetzer koennen nicht ausgeschlossen werden.
+Ein Echtzeit- oder CPU-Grenznachweis fehlt.
 
 ## Lizenz und Grenzen
 

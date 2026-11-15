@@ -25,9 +25,13 @@ public:
     void prepare(double sampleRate, std::size_t channels);
     void reset() noexcept;
 
-    // Lock-free setting exchange. A change is observed at the next non-empty
-    // process call and smoothed by the audio path; amount is clamped to 0..1.
-    void setTail(float amount, TailMode mode) noexcept;
+    // Lock-free setting exchange. Changes are observed at the next non-empty
+    // process call and smoothed by the audio path. The band pair is transferred
+    // atomically; amount is clamped to 0..1 and band limits to 40..16000 Hz.
+    void setTail(float amount,
+                 TailMode mode,
+                 float lowHz = 500.0f,
+                 float highHz = 1500.0f) noexcept;
 
     // Prepared channel count; non-null, writable planar buffers for numSamples.
     // A zero-sample call does not inspect the pointers or advance the stream.
@@ -38,5 +42,7 @@ private:
     struct Impl;
     std::unique_ptr<Impl> impl;
     std::atomic<std::uint32_t> requestedTailSettings { 0 };
+    // 16-bit quarter-Hz values: 500*4 in the low word, 1500*4 in the high.
+    std::atomic<std::uint32_t> requestedBandSettings { 0x177007d0u };
 };
 }

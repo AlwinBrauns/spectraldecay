@@ -1843,6 +1843,459 @@ void checkShortTail(double sampleRate, CsvReport& report, Summary& summary)
     }
 }
 
+struct TailBand
+{
+    const char* name;
+    double lowHz;
+    double highHz;
+};
+
+constexpr TailBand defaultTailBand { "default_500_1500Hz", 500.0, 1500.0 };
+constexpr TailBand alternateTailBand { "alternate_2000_3000Hz", 2000.0, 3000.0 };
+constexpr TailBand lowEdgeTailBand { "lower_edge_40_500Hz", 40.0, 500.0 };
+constexpr TailBand highEdgeTailBand { "upper_edge_15000_16000Hz", 15000.0, 16000.0 };
+
+void setTailForBand(NeutralStft& processor,
+                    float amount,
+                    TailMode mode,
+                    const TailBand& band,
+                    bool reverseBounds = false)
+{
+    if (!reverseBounds && band.lowHz == defaultTailBand.lowHz
+        && band.highHz == defaultTailBand.highHz)
+    {
+        // Exercise the documented defaults as well as explicit frequency ranges.
+        processor.setTail(amount, mode);
+        return;
+    }
+
+    processor.setTail(amount, mode,
+                      static_cast<float>(reverseBounds ? band.highHz : band.lowHz),
+                      static_cast<float>(reverseBounds ? band.lowHz : band.highHz));
+}
+
+TestSignal makeExponentialBandProbe(double sampleRate,
+                                    const TailBand& band,
+                                    const std::string& kind,
+                                    std::size_t channelCount,
+                                    double totalSeconds,
+                                    double sourceSeconds,
+                                    bool includeForeignTone)
+{
+    constexpr double decaySeconds = 0.12;
+    constexpr double sourcePeak = 0.25;
+    constexpr double foreignFrequencyHz = 8000.0;
+    constexpr double foreignAmplitude = 0.1;
+    const auto totalFrames = framesFor(totalSeconds, sampleRate);
+    const auto sourceFrames = std::min(framesFor(sourceSeconds, sampleRate), totalFrames);
+    TestSignal signal = makeBlankSignal(
+        "exponential_" + kind + "_in_" + band.name
+            + (includeForeignTone ? "_with_continuous_8kHz_foreign_tone" : ""),
+        channelCount, totalFrames);
+
+    std::vector<double> frequencies;
+    std::vector<double> phaseSin;
+    std::vector<double> phaseCos;
+    std::vector<double> rotationSin;
+    std::vector<double> rotationCos;
+
+    if (kind == "tonal")
+    {
+        const double center = 0.5 * (band.lowHz + band.highHz);
+        const double frequency = std::round(center / 4.0) * 4.0;
+        frequencies.push_back(frequency);
+        phaseSin.push_back(std::sin(0.37));
+        phaseCos.push_back(std::cos(0.37));
+    }
+    else
+    {
+        // Fixed-seed random-phase partials on a 4-Hz grid form a reproducible,
+        // noise-like signal wholly within the selected band.
+        constexpr double partialSpacingHz = 16.0;
+        const double marginHz = std::max(16.0, 0.1 * (band.highHz - band.lowHz));
+        const double first = std::ceil((band.lowHz + marginHz) / partialSpacingHz)
+                           * partialSpacingHz;
+        const double last = band.highHz - marginHz;
+        std::uint32_t state = 0xA341316Cu;
+        constexpr double uint32Max = 4294967295.0;
+        for (double frequency = first; frequency <= last;
+             frequency += partialSpacingHz)
+        {
+            state ^= state << 13;
+            state ^= state >> 17;
+            state ^= state << 5;
+            const double phase = 2.0 * std::acos(-1.0)
+                               * static_cast<double>(state) / uint32Max;
+            frequencies.push_back(frequency);
+            phaseSin.push_back(std::sin(phase));
+            phaseCos.push_back(std::cos(phase));
+        }
+    }
+
+    const double twoPi = 2.0 * std::acos(-1.0);
+    for (const double frequency : frequencies)
+    {
+        const double phaseAdvance = twoPi * frequency / sampleRate;
+        rotationSin.push_back(std::sin(phaseAdvance));
+        rotationCos.push_back(std::cos(phaseAdvance));
+    }
+
+    std::vector<double> source(sourceFrames, 0.0);
+    double sourceMaximum = 0.0;
+    for (std::size_t frame = 0; frame < sourceFrames; ++frame)
+    {
+        double value = 0.0;
+        for (std::size_t partial = 0; partial < frequencies.size(); ++partial)
+        {
+            value += phaseSin[partial];
+            const double nextSin = phaseSin[partial] * rotationCos[partial]
+                                 + phaseCos[partial] * rotationSin[partial];
+            const double nextCos = phaseCos[partial] * rotationCos[partial]
+                                 - phaseSin[partial] * rotationSin[partial];
+            phaseSin[partial] = nextSin;
+            phaseCos[partial] = nextCos;
+        }
+        source[frame] = value;
+        sourceMaximum = std::max(sourceMaximum, std::abs(value));
+    }
+
+    const double sourceScale = sourceMaximum > 0.0 ? sourcePeak / sourceMaximum : 0.0;
+    double foreignSin = std::sin(0.19);
+    double foreignCos = std::cos(0.19);
+    const double foreignPhaseAdvance = twoPi * foreignFrequencyHz / sampleRate;
+    const double foreignRotationSin = std::sin(foreignPhaseAdvance);
+    const double foreignRotationCos = std::cos(foreignPhaseAdvance);
+
+    for (std::size_t frame = 0; frame < totalFrames; ++frame)
+    {
+        const double time = static_cast<double>(frame) / sampleRate;
+        double value = 0.0;
+        if (frame < sourceFrames)
+            value = source[frame] * sourceScale * std::exp(-time / decaySeconds);
+
+        if (includeForeignTone)
+        {
+            value += foreignAmplitude * foreignSin;
+            const double nextSin = foreignSin * foreignRotationCos
+                                 + foreignCos * foreignRotationSin;
+            const double nextCos = foreignCos * foreignRotationCos
+                                 - foreignSin * foreignRotationSin;
+            foreignSin = nextSin;
+            foreignCos = nextCos;
+        }
+
+        for (auto& channel : signal.input)
+            channel[frame] = static_cast<float>(value);
+    }
+    return signal;
+}
+
+double goertzelPower(const std::vector<float>& samples,
+                     std::size_t begin,
+                     std::size_t end,
+                     double frequencyHz,
+                     double sampleRate)
+{
+    const double twoPi = 2.0 * std::acos(-1.0);
+    const double coefficient = 2.0 * std::cos(twoPi * frequencyHz / sampleRate);
+    double previous = 0.0;
+    double previousPrevious = 0.0;
+    for (std::size_t frame = begin; frame < end; ++frame)
+    {
+        const double current = static_cast<double>(samples[frame])
+                             + coefficient * previous - previousPrevious;
+        previousPrevious = previous;
+        previous = current;
+    }
+
+    const double unnormalised = previous * previous
+                              + previousPrevious * previousPrevious
+                              - coefficient * previous * previousPrevious;
+    const double count = static_cast<double>(end - begin);
+    return std::max(0.0, unnormalised) * 4.0 / (count * count);
+}
+
+double bandSpectralPower(const RunResult& result,
+                         std::size_t channel,
+                         double sampleRate,
+                         double lowHz,
+                         double highHz,
+                         std::size_t inputTimelineBegin,
+                         std::size_t inputTimelineEnd)
+{
+    const auto begin = inputTimelineBegin + static_cast<std::size_t>(result.latency);
+    const auto end = inputTimelineEnd + static_cast<std::size_t>(result.latency);
+    const double binSpacing = sampleRate / static_cast<double>(end - begin);
+    const auto firstBin = static_cast<std::size_t>(std::ceil(lowHz / binSpacing));
+    const auto lastBin = static_cast<std::size_t>(std::floor(highHz / binSpacing));
+    long double power = 0.0L;
+    for (std::size_t bin = firstBin; bin <= lastBin; ++bin)
+    {
+        const double frequency = static_cast<double>(bin) * binSpacing;
+        power += goertzelPower(result.output[channel], begin, end,
+                               frequency, sampleRate);
+    }
+    return static_cast<double>(power);
+}
+
+void checkFrequencySelectiveBand(double sampleRate,
+                                 std::size_t blockSize,
+                                 const TailBand& band,
+                                 bool checkReversedBounds,
+                                 bool checkAmountZero,
+                                 bool checkTwoSecondLimit,
+                                 CsvReport& report,
+                                 Summary& summary)
+{
+    const auto measurementBegin = framesFor(0.85, sampleRate);
+    const auto measurementEnd = framesFor(1.10, sampleRate);
+    constexpr double foreignFrequencyHz = 8000.0;
+
+    for (const std::string kind : { "tonal", "noise_like" })
+    {
+        const auto signal = makeExponentialBandProbe(
+            sampleRate, band, kind, 1, 1.6, 1.6, true);
+        NeutralStft neutral;
+        neutral.prepare(sampleRate, 1);
+        neutral.reset();
+        const auto neutralResult = processSignal(neutral, signal, blockSize);
+        const auto neutralBandPower = bandSpectralPower(
+            neutralResult, 0, sampleRate, band.lowHz, band.highHz,
+            measurementBegin, measurementEnd);
+        const auto neutralForeignPower = goertzelPower(
+            neutralResult.output[0],
+            measurementBegin + static_cast<std::size_t>(neutralResult.latency),
+            measurementEnd + static_cast<std::size_t>(neutralResult.latency),
+            foreignFrequencyHz, sampleRate);
+
+        for (const auto mode : { TailMode::tonal, TailMode::noise })
+        {
+            const std::string name = std::string("selective_") + band.name + "_"
+                                   + kind + "_" + tailModeName(mode);
+            NeutralStft active;
+            active.prepare(sampleRate, 1);
+            setTailForBand(active, 1.0f, mode, band);
+            active.reset();
+            const auto result = processSignal(active, signal, blockSize);
+            const auto activeBandPower = bandSpectralPower(
+                result, 0, sampleRate, band.lowHz, band.highHz,
+                measurementBegin, measurementEnd);
+            const auto activeForeignPower = goertzelPower(
+                result.output[0],
+                measurementBegin + static_cast<std::size_t>(result.latency),
+                measurementEnd + static_cast<std::size_t>(result.latency),
+                foreignFrequencyHz, sampleRate);
+            const auto difference = differenceMetrics(
+                result.output, neutralResult.output, 0);
+            const double selectedBandGain = neutralBandPower > 0.0
+                ? std::sqrt(activeBandPower / neutralBandPower) : 0.0;
+            const double foreignToneGain = neutralForeignPower > 0.0
+                ? std::sqrt(activeForeignPower / neutralForeignPower)
+                : std::numeric_limits<double>::infinity();
+
+            recordTailMeasurement(summary, report, sampleRate, blockSize, name,
+                                  "M", neutralResult, "neutral_selected_band_rms",
+                                  std::sqrt(neutralBandPower), 0.0,
+                                  "0p85_to_1p10s_while_8kHz_tone_continues");
+            recordTailMeasurement(summary, report, sampleRate, blockSize, name,
+                                  "M", result, "active_selected_band_rms",
+                                  std::sqrt(activeBandPower), 0.0,
+                                  "0p85_to_1p10s_while_8kHz_tone_continues");
+            recordTailMeasurement(summary, report, sampleRate, blockSize, name,
+                                  "M", result, "selected_band_power_gain",
+                                  selectedBandGain, 0.0, "active_over_neutral");
+            recordTailMeasurement(summary, report, sampleRate, blockSize, name,
+                                  "M", result, "foreign_8kHz_power_gain",
+                                  foreignToneGain, 0.0, "active_over_neutral");
+
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", name, "M",
+                             "0p85_to_1p10s", result,
+                             "selected_band_power_increases_during_natural_decay",
+                             activeBandPower > neutralBandPower,
+                             std::sqrt(activeBandPower) - std::sqrt(neutralBandPower),
+                             selectedBandGain,
+                             "strict directional comparison; no sound-quality threshold",
+                             toString(measurementBegin), toString(measurementEnd),
+                             "latency-aligned input timeline; Goertzel-bin band power");
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", name, "M",
+                             "0p85_to_1p10s", result,
+                             "selected_band_gain_exceeds_continuing_foreign_tone_gain",
+                             selectedBandGain > foreignToneGain,
+                             selectedBandGain, foreignToneGain,
+                             "relative in-band vs 8-kHz Goertzel power; no absolute tolerance",
+                             toString(measurementBegin), toString(measurementEnd),
+                             "latency-aligned input timeline");
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", name, "M",
+                             "full", result, "active_output_differs_from_neutral",
+                             difference.first > 0.0,
+                             difference.first, difference.second,
+                             "same input and reported latency",
+                             "0", toString(result.outputFrames),
+                             "output_sample_index");
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", name, "M",
+                             "full", result, "variable_range_output_is_finite",
+                             allFinite(result, 0),
+                             {}, {}, {}, "0", toString(result.outputFrames),
+                             "output_sample_index");
+
+            if (checkReversedBounds && kind == "tonal"
+                && mode == TailMode::tonal)
+            {
+                NeutralStft reversed;
+                reversed.prepare(sampleRate, 1);
+                setTailForBand(reversed, 1.0f, mode, band, true);
+                reversed.reset();
+                const auto reversedResult = processSignal(reversed, signal, blockSize);
+                recordExactCheck(summary, report, toString(sampleRate),
+                                 toString(blockSize), "mono", name, "M",
+                                 "sorted_vs_reversed_bounds", reversedResult,
+                                 "reversed_frequency_bounds_match_sorted_bounds",
+                                 exactlyEqualChannel(result.output[0],
+                                                     reversedResult.output[0]),
+                                 {}, {}, "same [low, high] range after ordering",
+                                 "0", toString(result.outputFrames),
+                                 "output_sample_index");
+            }
+
+            if (checkAmountZero && kind == "tonal"
+                && mode == TailMode::tonal)
+            {
+                NeutralStft zeroAmount;
+                zeroAmount.prepare(sampleRate, 1);
+                setTailForBand(zeroAmount, 0.0f, mode, band);
+                zeroAmount.reset();
+                const auto zeroResult = processSignal(
+                    zeroAmount, signal, blockSize);
+                recordExactCheck(summary, report, toString(sampleRate),
+                                 toString(blockSize), "mono", name, "M",
+                                 "amount_zero", zeroResult,
+                                 "amount_zero_is_bitwise_neutral_for_selected_range",
+                                 exactlyEqualChannel(neutralResult.output[0],
+                                                     zeroResult.output[0]),
+                                 {}, {}, "compared with unset/default neutral processor",
+                                 "0", toString(zeroResult.outputFrames),
+                                 "output_sample_index");
+            }
+        }
+    }
+
+    // A configured band with no in-band input must not emit synthesized audio.
+    for (const auto mode : { TailMode::tonal, TailMode::noise })
+    {
+        const auto silence = makeBlankSignal(
+            "variable_range_zero_input_" + std::string(band.name),
+            1, framesFor(0.75, sampleRate));
+        NeutralStft silentProcessor;
+        silentProcessor.prepare(sampleRate, 1);
+        setTailForBand(silentProcessor, 1.0f, mode, band);
+        silentProcessor.reset();
+        const auto silentResult = processSignal(
+            silentProcessor, silence, blockSize);
+        const bool allZero = std::all_of(
+            silentResult.output[0].begin(), silentResult.output[0].end(),
+            [](float sample) { return sample == 0.0f; });
+        recordExactCheck(summary, report, toString(sampleRate),
+                         toString(blockSize), "mono", silence.name, "M",
+                         "full", silentResult,
+                         "zero_input_emits_no_tail_and_remains_finite",
+                         allZero && allFinite(silentResult, 0),
+                         {}, {}, "nonzero amount and selected frequency range",
+                         "0", toString(silentResult.outputFrames),
+                         "output_sample_index");
+    }
+
+    if (checkTwoSecondLimit)
+    {
+        for (const auto mode : { TailMode::tonal, TailMode::noise })
+        {
+            const auto burst = makeExponentialBandProbe(
+                sampleRate, band, "tonal", 1, 2.7, 0.5, false);
+            NeutralStft bounded;
+            bounded.prepare(sampleRate, 1);
+            setTailForBand(bounded, 1.0f, mode, band);
+            bounded.reset();
+            const auto boundedResult = processSignal(bounded, burst, blockSize);
+            const auto cutoffTimeline = framesFor(0.5, sampleRate)
+                                      + framesFor(2.0, sampleRate);
+            const bool ended = allZeroFromInputTimeline(
+                boundedResult, 0, cutoffTimeline);
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", burst.name, "M",
+                             "from_two_second_cutoff", boundedResult,
+                             "selected_range_tail_is_zero_after_two_seconds",
+                             ended && allFinite(boundedResult, 0),
+                             {}, {}, "exponential excitation ends at 0.5 s; selected range",
+                             toString(cutoffTimeline),
+                             toString(boundedResult.inputFrames),
+                             "latency-aligned input timeline");
+        }
+    }
+}
+
+void checkVariableRangeStereo(double sampleRate,
+                              std::size_t blockSize,
+                              CsvReport& report,
+                              Summary& summary)
+{
+    for (const auto& test : {
+             std::pair<const char*, TailMode>{"tonal", TailMode::tonal},
+             {"noise_like", TailMode::noise}})
+    {
+        const auto signal = makeExponentialBandProbe(
+            sampleRate, alternateTailBand, test.first, 2, 1.6, 1.6, true);
+        NeutralStft stereo;
+        stereo.prepare(sampleRate, 2);
+        setTailForBand(stereo, 1.0f, test.second, alternateTailBand);
+        stereo.reset();
+        const auto result = processSignal(stereo, signal, blockSize);
+        const bool coherent = exactlyEqualChannel(result.output[0], result.output[1]);
+        recordExactCheck(summary, report, toString(sampleRate),
+                         toString(blockSize), "stereo", signal.name, "LR",
+                         "full", result,
+                         "identical_inputs_remain_coherent_with_variable_range",
+                         coherent && allFinite(result, 0) && allFinite(result, 1),
+                         {}, {}, "equal channels; explicit 2000-3000-Hz range",
+                         "0", toString(result.outputFrames),
+                         "output_sample_index");
+    }
+
+    const auto burstLength = 48 * NeutralStft::hopSize;
+    auto asymmetrical = makeBlankSignal("stereo_distinct_with_equal_hop_boundary",
+                                        2, burstLength + framesFor(0.5, sampleRate));
+    for (std::size_t frame = 0; frame < burstLength; ++frame)
+    {
+        const auto sample = static_cast<float>(
+            0.2 * std::sin(2.0 * std::acos(-1.0) * 1000.0 * frame / sampleRate));
+        asymmetrical.input[0][frame] = sample;
+        asymmetrical.input[1][frame] = frame % NeutralStft::hopSize == NeutralStft::hopSize - 1
+                                          ? sample : 0.5f * sample;
+    }
+    for (const auto mode : {TailMode::tonal, TailMode::noise})
+    {
+        NeutralStft stereo;
+        stereo.prepare(sampleRate, 2);
+        stereo.setTail(1.0f, mode);
+        const auto result = processSignal(stereo, asymmetrical, blockSize);
+        const auto begin = burstLength + framesFor(0.1, sampleRate);
+        const auto end = burstLength + framesFor(0.2, sampleRate);
+        const auto left = tailWindowMetrics(result, 0, begin, end);
+        const auto right = tailWindowMetrics(result, 1, begin, end);
+        recordExactCheck(summary, report, toString(sampleRate), toString(blockSize),
+                         "stereo", asymmetrical.name, "LR", "0p1_to_0p2s_after_burst",
+                         result, "distinct_channels_not_collapsed_by_equal_hop_sample",
+                         left.finite && right.finite && left.rms > 1.4 * right.rms
+                             && right.rms > 0.0,
+                         left.peak, left.rms,
+                         "L is twice R except at individual hop-boundary samples; mode="
+                             + std::string(tailModeName(mode)),
+                         toString(begin), toString(end), "latency-aligned input timeline");
+    }
+}
+
 std::optional<std::string> reportPath(int argc, char** argv)
 {
     std::string path = "offline-metrics.csv";
@@ -1918,8 +2371,27 @@ int main(int argc, char** argv)
                                         report, summary);
 
                     if (channelCount == 1)
+                    {
                         checkTailExperiment(sampleRate, blockSize, report, summary,
                                             tailBlockOneReference);
+                        checkFrequencySelectiveBand(
+                            sampleRate, blockSize, defaultTailBand,
+                            false, true, false, report, summary);
+                        checkFrequencySelectiveBand(
+                            sampleRate, blockSize, alternateTailBand,
+                            true, true, true, report, summary);
+                        checkVariableRangeStereo(
+                            sampleRate, blockSize, report, summary);
+                        if (blockSize == 257)
+                        {
+                            checkFrequencySelectiveBand(
+                                sampleRate, blockSize, lowEdgeTailBand,
+                                false, true, false, report, summary);
+                            checkFrequencySelectiveBand(
+                                sampleRate, blockSize, highEdgeTailBand,
+                                false, true, false, report, summary);
+                        }
+                    }
                 }
             }
         }

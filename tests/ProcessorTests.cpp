@@ -15,6 +15,32 @@ int main()
             if (editor == nullptr)
                 throw std::runtime_error("The prototype editor could not be created");
         }
+        {
+            auto& amount = findParameter(processor, "Tail amount");
+            auto& mode = findParameter(processor, "Tail mode");
+            auto& low = findParameter(processor, "Low frequency");
+            auto& high = findParameter(processor, "High frequency");
+            low.setValueNotifyingHost(low.getValueForText("3000"));
+            high.setValueNotifyingHost(high.getValueForText("6000"));
+            juce::ValueTree oldState("SpectralDecayState");
+            for (const auto& entry : {std::pair<const char*, float>{"tailAmount", 0.75f},
+                                      {"tailMode", 1.0f}})
+            {
+                juce::ValueTree parameter("PARAM");
+                parameter.setProperty("id", entry.first, nullptr);
+                parameter.setProperty("value", entry.second, nullptr);
+                oldState.appendChild(parameter, nullptr);
+            }
+            juce::MemoryBlock state;
+            juce::AudioProcessor::copyXmlToBinary(*oldState.createXml(), state);
+            processor.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+            if (std::abs(amount.getValue() - 0.75f) > 0.001f || mode.getValue() < 0.99f
+                || std::abs(low.getValue() - low.getValueForText("500")) > 0.001f
+                || std::abs(high.getValue() - high.getValueForText("1500")) > 0.001f)
+                throw std::runtime_error("Old state did not restore values and frequency defaults");
+            amount.setValueNotifyingHost(0.0f);
+            mode.setValueNotifyingHost(0.0f);
+        }
         checkProcessor(processor);
         auto unsupported = processor.getBusesLayout();
         unsupported.inputBuses.set(0, juce::AudioChannelSet::mono());

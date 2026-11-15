@@ -38,6 +38,8 @@ private:
     juce::AudioProcessorValueTreeState parameters;
     std::atomic<float>* tailAmount;
     std::atomic<float>* tailMode;
+    std::atomic<float>* tailLowHz;
+    std::atomic<float>* tailHighHz;
     NeutralStft engine;
     double preparedSampleRate = 0.0;
     int preparedChannels = 0;

@@ -9,9 +9,12 @@ NeutralAudioProcessor::NeutralAudioProcessor()
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       parameters(*this, nullptr, "SpectralDecayState", createParameterLayout()),
       tailAmount(parameters.getRawParameterValue("tailAmount")),
-      tailMode(parameters.getRawParameterValue("tailMode"))
+      tailMode(parameters.getRawParameterValue("tailMode")),
+      tailLowHz(parameters.getRawParameterValue("tailLowHz")),
+      tailHighHz(parameters.getRawParameterValue("tailHighHz"))
 {
-    jassert(tailAmount != nullptr && tailMode != nullptr);
+    jassert(tailAmount != nullptr && tailMode != nullptr
+            && tailLowHz != nullptr && tailHighHz != nullptr);
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout NeutralAudioProcessor::createParameterLayout()
@@ -23,6 +26,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout NeutralAudioProcessor::creat
     layout.add(std::make_unique<juce::AudioParameterChoice>(
         juce::ParameterID{"tailMode", 1}, "Tail mode",
         juce::StringArray{"Tonal", "Noise"}, 0));
+    juce::NormalisableRange<float> frequencyRange{40.0f, 16000.0f, 1.0f};
+    frequencyRange.setSkewForCentre(1000.0f);
+    const auto attributes = juce::AudioParameterFloatAttributes().withLabel("Hz");
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{"tailLowHz", 1}, "Low frequency",
+        frequencyRange, 500.0f, attributes));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{"tailHighHz", 1}, "High frequency",
+        frequencyRange, 1500.0f, attributes));
     return layout;
 }
 
@@ -69,7 +81,9 @@ void NeutralAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     engine.setTail(tailAmount->load(std::memory_order_relaxed),
                    tailMode->load(std::memory_order_relaxed) < 0.5f
                        ? NeutralStft::TailMode::tonal
-                       : NeutralStft::TailMode::noise);
+                       : NeutralStft::TailMode::noise,
+                   tailLowHz->load(std::memory_order_relaxed),
+                   tailHighHz->load(std::memory_order_relaxed));
     engine.process(buffer.getArrayOfWritePointers(),
                    static_cast<std::size_t>(buffer.getNumSamples()));
 }
@@ -105,7 +119,21 @@ void NeutralAudioProcessor::setStateInformation(const void* data, int size)
         {
             if (xml->hasTagName(parameters.state.getType()))
             {
-                parameters.replaceState(juce::ValueTree::fromXml(*xml));
+                auto state = juce::ValueTree::fromXml(*xml);
+                for (const auto* id : {"tailLowHz", "tailHighHz"})
+                {
+                    if (!state.getChildWithProperty("id", id).isValid())
+                    {
+                        auto* parameter = parameters.getParameter(id);
+                        juce::ValueTree child("PARAM");
+                        child.setProperty("id", id, nullptr);
+                        child.setProperty("value",
+                                          parameter->convertFrom0to1(parameter->getDefaultValue()),
+                                          nullptr);
+                        state.appendChild(child, nullptr);
+                    }
+                }
+                parameters.replaceState(state);
                 return;
             }
         }
