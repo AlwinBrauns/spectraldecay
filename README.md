@@ -1,5 +1,7 @@
 # Spectral Decay – Prototyp 2: Bipolares EQ-Peak-Band
 
+<img width="587" height="411" alt="image" src="https://github.com/user-attachments/assets/32f71429-ed68-44ce-b025-0e3ac99eb0b2" />
+
 Experimenteller JUCE/C++-VST3-Prototyp, der die Abklingzeit eines einzelnen
 Frequenzbands bipolar bearbeitet. Prototyp 2 ersetzt im Hauptbaum die Low-/High-Schieber von Prototyp 1,
 den unipolaren Tail-Regler und den binären Tone/Noise-Schalter durch ein
