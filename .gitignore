@@ -1,3 +1,7 @@
 /build*/
 /out/
 /.cache/
+/plugin-export/
+/prototyp/*/build*/
+/prototyp/*/out/
+/prototyp/*/plugin-export/

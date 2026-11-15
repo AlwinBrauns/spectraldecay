@@ -2,29 +2,45 @@
 
 Status: Entwurf auf Grundlage der Produktvision und des Interviews vom
 15. November 2026. Die Reihenfolge und der Zuschnitt sind Vorschläge, keine
-Umsetzungsfreigabe. Der Prototyp enthält inzwischen einen neutralen
-STFT-Signalweg und einen begrenzten, experimentellen Verlängerungszweig.
-Diese Zwischenstände erfüllen die vollständigen Backlog-Ziele nicht und
-schließen daher keinen Eintrag als Produktanforderung ab.
+Produktfreigabe. Prototyp 1 ist unter [prototyp/eins](../../prototyp/eins/)
+archiviert; im Hauptbaum ist Prototyp 2 mit bipolarem EQ-Peak-Band,
+stufenlosem Tone/Noise-Regler und eigenem Editor implementiert. Linux-x86-64
+Build und 3/3 CTest-Programme sind belegt. Messwerte und offene Grenzen stehen
+im [Prüfbericht Prototyp 2](../verification/peak-band-prototype-2.md).
+Windows-/Ableton-Hörtest und numerische Produkt-Abnahmetoleranzen bleiben
+offen; der Prototyp schließt daher keine Produktanforderung ab.
 
 ## Aktueller Umsetzungsstand
 
 | Eintrag | Belegter Stand | Noch offen |
 | --- | --- | --- |
 | PB-01 | JUCE 9.0.5 und PFFFT v1.3.0 sind im Build fixiert; Lizenztexte und Inventar liegen vor. | Rechteinhaber, abschließende Lizenz-/Distributionsprüfung und Produktarchitektur. |
-| PB-02 | Neutraler STFT-Pfad mit 2048 Samples gemeldeter und gemessener Latenz; Linux-Build und 3/3 CTest-Programme erfolgreich. | Numerische Abnahmegrenzen sowie Windows-/Ableton-Nachweis. |
-| PB-03 | Keine Verkürzung implementiert. | Algorithmus, Messkriterien und Hörnachweis. |
-| PB-04 | Experimenteller, bandbegrenzter Tail mit manuell gewähltem Tonal-/Noise-Modus; siehe [Prüfbericht](../verification/tail-prototype.md). | Kein Kurveneditor, keine automatische Tonal-/Rauschtrennung und kein gleichzeitiger Verkürzungsnachweis; Klangqualität und Windows-/Ableton-Test offen. |
-| PB-05 | Generischer JUCE-Editor mit vier Versuchsparametern. | Der vorgesehene Kurveneditor mit drei Punkten und Skala −5 bis +5 fehlt. |
+| PB-02 | Neutraler STFT-Pfad, 2048 Samples gemeldete/gemessene Latenz; Linux-Build und 3/3 CTest-Programme erfolgreich. | Numerische Produkt-Abnahmegrenzen sowie Windows-/Ableton-Nachweis. |
+| PB-03 | Prototyp 2 implementiert bipolare Verkürzung mit Onset-Schutz; Offline-Messung zeigt deutlich reduzierte Nachklangenergie bei weitgehend erhaltenem Onset. | Windows-/Ableton-Hörnachweis und numerische Abnahmetoleranzen. |
+| PB-04 | Prototyp 2 implementiert Peak-Band-Verlängerung mit tonal/stochastischer Synthese, Morph und begrenztem Sample-Peak-Schutz; siehe [Prüfbericht](../verification/peak-band-prototype-2.md). | Hörqualität, offene Klangtoleranzen und True-Peak-Nachweis. |
+| PB-05 | Eigener Peak-Band-Editor mit ziehbarem Punkt und vier gekoppelten Reglern für Prototyp 2. | Windows-/Ableton-Bediennachweis; langfristiger Mehrpunkt-Editor bleibt Produktziel. |
 | PB-06 | Mono- und Stereo-Layouts sind implementiert und in den Linux-Tests enthalten. | Produktqualität und Stabilität des Stereobilds unter Bearbeitung sind nicht abgenommen. |
 | PB-07 | Kein eigener Bypass und keine Dry/Wet-Mischung. | Latenzkompensierte Mischung, Bypass und Übergänge. |
-| PB-08 | Der Tail-Versuch hat eine vorläufige Zwei-Sekunden-Grenze und einen einfachen Sample-Peak-Schutz nur bei zusätzlichem Tail. | Kein True-Peak-Nachweis oder vollständiger Ausgangsschutz; Stillebezug und Akzeptanzgrenzen bleiben offen. |
-| PB-09 | Linux-Build, Offline-, Processor- und geladener VST3-Modultest erfolgreich. | Windows-/Ableton- und Hörtest; kein vollständiger Echtzeitnachweis für den JUCE-VST3-Gesamtpfad. |
+| PB-08 | P2-Offline-Test weist exakte 2,0-s-Ausgabegrenze und Sample-Peak-Ceiling `max(tailOutputCeiling, |dry|)` nach. | Kein True-Peak-Nachweis; Aktivitätsbezug und Abnahmegrenzen offen. |
+| PB-09 | Linux-Build, Offline-, Processor- und geladener VST3-Modultest erfolgreich; Einzelheiten im [P2-Prüfbericht](../verification/peak-band-prototype-2.md). | Windows-/Ableton- und Hörtest; vollständiger Echtzeitnachweis für den JUCE-VST3-Gesamtpfad fehlt. |
 
-Der frühere [neutrale Prüfbericht](../verification/neutral-prototype.md)
-dokumentiert den damaligen Stand. Die aktuelle Tail-Erweiterung ist separat
-im [Prüfbericht zum Tail-Prototyp](../verification/tail-prototype.md)
-beschrieben. Messwerte sind keine Abnahme offener Produktgrenzen.
+Der [neue Prüfbericht Prototyp 2](../verification/peak-band-prototype-2.md)
+dokumentiert aktuelle Umsetzung, Linux-Messwerte und offene Grenzen. Der
+[neutrale Prüfbericht](../verification/neutral-prototype.md) und der
+[Tail-Prüfbericht zu P1](../verification/tail-prototype.md) bleiben als
+historische Nachweise erhalten. Messwerte sind keine Abnahme offener
+Produktgrenzen.
+
+## Übergang zu Prototyp 2
+
+Die berichteten fünf Beobachtungen aus Prototyp 1 begründen einen begrenzten
+zweiten Versuch: ein Peak-Band mit `bandFreqHz` und `bandQ`, bipolarer
+`bandDecay`-Wert (negativ kürzer, 0 neutral, positiv länger) und stufenloser
+`toneNoise`-Übergang. Die Begriffe **Peak-Band**, **Güte / Q**, **bipolarer
+Decay-Wert** und **Tone/Noise-Übergang** sind in diesem Versuch gemeint; sie
+ändern keine langfristigen Produktziele. Umfang und Kriterien stehen in der
+[abgestimmten Prototyp-2-Spec](../specs/prototyp-zwei-peak-band.md).
+Zahlen-/Messschwellen und Produktfreigabe bleiben offen.
 
 ## Ziel des ersten Entwicklungs-Builds
 

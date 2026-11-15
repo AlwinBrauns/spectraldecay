@@ -1,0 +1,40 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "offline",
+      "displayName": "DSP and offline tests only",
+      "binaryDir": "${sourceDir}/out/offline",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_TESTING": "ON",
+        "SPECTRAL_DECAY_BUILD_PLUGIN": "OFF"
+      }
+    },
+    {
+      "name": "windows-x64",
+      "displayName": "Windows x86-64 VST3 and all tests",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/out/windows-x64",
+      "cacheVariables": {
+        "BUILD_TESTING": "ON",
+        "SPECTRAL_DECAY_BUILD_PLUGIN": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "offline", "configurePreset": "offline", "jobs": 2 },
+    { "name": "windows-x64", "configurePreset": "windows-x64", "configuration": "Release", "jobs": 2 }
+  ],
+  "testPresets": [
+    { "name": "offline", "configurePreset": "offline", "output": { "outputOnFailure": true } },
+    {
+      "name": "windows-x64",
+      "configurePreset": "windows-x64",
+      "configuration": "Release",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}

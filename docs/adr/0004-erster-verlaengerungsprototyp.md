@@ -3,7 +3,7 @@
 - **Status:** Vorschlag durch abweichenden Prototyp umgesetzt, nicht als Produktentscheidung übernommen
 - **Datum:** 2026-11-15
 - **Entscheider:** Produktverantwortung; DSP-Entwicklung und Test beraten
-- **Bezug:** [Produktvision](../product/product-vision.md#technische-richtung-und-risiken), [Backlog PB-03/PB-04](../product/product-backlog.md#vorgeschlagene-reihenfolge), [ADR 0001](0001-prototyp-architektur.md), [neutraler STFT-Kern](../../src/dsp/NeutralStft.cpp)
+- **Bezug:** [Produktvision](../product/product-vision.md#technische-richtung-und-risiken), [Backlog PB-03/PB-04](../product/product-backlog.md#vorgeschlagene-reihenfolge), [ADR 0001](0001-prototyp-architektur.md), [neutraler STFT-Kern](../../prototyp/eins/src/dsp/NeutralStft.cpp)
 
 ## Implementierungsstand
 

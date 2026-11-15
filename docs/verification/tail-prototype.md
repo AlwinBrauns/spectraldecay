@@ -37,6 +37,19 @@ Sample-Peak-Schutz greift nur, wenn zusätzlicher Tail ausgegeben wird. Er
 strebt −1 dBFS an, lässt aber bereits höhere Dry-Peaks unangetastet und ist
 kein True-Peak-Limiter.
 
+## Berichteter Windows-/Ableton-Hörbefund zu Prototyp 1
+
+Am 2026-11-15 berichtete der Auftraggeber, Prototyp 1 unter Windows gebaut
+und in Ableton angehört zu haben. Die fünf qualitativen Beobachtungen waren:
+Tail nur positiv (Verlängerung), Tone/Noise binär, zwei Frequenzschieber,
+Noise klang „hallig“ und Tone klang „granular“. Dies ist kein formaler
+Messnachweis: Host-/Buildversionen, Material, Samplerate, Puffer,
+Messreihen und ein Hörtestprotokoll bleiben offen. Der damalige
+Prototyp-1-Stand ist unter [prototyp/eins](../../prototyp/eins/) konserviert;
+der Bericht begründet die Untersuchung in
+[Spec Prototyp 2](../specs/prototyp-zwei-peak-band.md), nicht eine
+Produktabnahme.
+
 ## Verifikation
 
 Die Offline-Tests untersuchen unter anderem tonale und rauschhafte Bursts,

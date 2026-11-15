@@ -4,10 +4,10 @@ Spectral Decay ist ein geplantes VST3-Plugin (JUCE, C++), das die Abklingzeit ei
 
 ## Projektstand
 
-- Es gibt einen experimentellen neutralen STFT-Prototyp mit CMake und Offline-/Processor-/VST3-Hosttests. Linux-x86-64-Build und alle drei Tests sind nachgewiesen; Windows-/Ableton-Nachweise stehen aus.
+- Prototyp 1 wurde nach dem berichteten Windows-/Ableton-Hörtest unter `prototyp/eins/` archiviert. Im Hauptbaum liegt nun Prototyp 2: bipolares EQ-Peak-Band, stufenloser Tone/Noise-Regler und eigener Peak-Band-Editor. Linux-x86-64: **3/3 CTest-Programme bestanden**; siehe [Prüfbericht](docs/verification/peak-band-prototype-2.md). Windows-/Ableton-Nachweis für Prototyp 2 steht aus.
 - Verifizierte DSP-Befehle: `cmake --preset offline`, `cmake --build --preset offline`, `ctest --preset offline`. Verifizierter Linux-VST3-Weg: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON`, `cmake --build build --parallel 2`, `ctest --test-dir build --output-on-failure`. Windows-Preset `windows-x64` ist angelegt, aber nicht unter Windows ausgeführt. CMake ab 3.24, C++17; kein Formatwerkzeug festgelegt.
 - Keine Toleranzen oder Akzeptanzschwellen festlegen, die die Vision ausdrücklich offen lässt – als Annahme oder offene Frage markieren.
-- Mess-/Nachweisstand: [Prüfprotokoll](docs/verification/neutral-prototype.md), [Windows/Ableton-Plan](docs/verification/windows-ableton.md). Ein grüner Testlauf wäre keine Abnahme offener numerischer Toleranzen.
+- Mess-/Nachweisstand: [Prüfbericht Prototyp 2](docs/verification/peak-band-prototype-2.md), [historisches Prüfprotokoll zum neutralen P1-Zwischenstand](docs/verification/neutral-prototype.md), [Windows/Ableton-Plan](docs/verification/windows-ableton.md). Ein grüner Testlauf ist keine Abnahme offener numerischer Toleranzen.
 - Eigener Code: `AGPL-3.0-or-later`; JUCE, SDK und FFT separat prüfen, siehe [Drittanbieterinventar](THIRD_PARTY_NOTICES.md). Keine Abhängigkeiten über bewegliche Tags beziehen.
 - Windows-Export: [Skript](scripts/export-plugin.ps1) und ausschließlich manuell ausgelöster [Workflow](.github/workflows/windows-prototype.yml). Erst nach tatsächlichen Windows-Tests als Windows-Artefakt ausgeben; Linux-Module nicht umetikettieren.
 

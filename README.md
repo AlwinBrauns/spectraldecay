@@ -1,60 +1,68 @@
-# Spectral Decay: experimenteller Prototyp
+# Spectral Decay – Prototyp 2: Bipolares EQ-Peak-Band
 
-Experimenteller JUCE/C++-VST3-Quellstand fuer Windows x86-64. Der bisher
-neutrale STFT-Pfad wird um einen begrenzten Verlaengerungsversuch erweitert.
-Das ist **noch nicht der vollstaendige Decay-Effekt**: Es gibt weder
-Kurveneditor noch Verkuerzung, Dry/Wet, eigene Bypass-Funktion oder
-True-Peak-Ausgangsschutz. Nicht auf wichtigen Projekten einsetzen; vor
-Hoertests den Abhoerpegel reduzieren.
+Experimenteller JUCE/C++-VST3-Prototyp, der die Abklingzeit eines einzelnen
+Frequenzbands bipolar bearbeitet. Prototyp 2 ersetzt im Hauptbaum die Low-/High-Schieber von Prototyp 1,
+den unipolaren Tail-Regler und den binären Tone/Noise-Schalter durch ein
+Peak-Band mit **Frequency**, **Width (Q)**, **Decay** und **Tone / Noise**. Der erste Prototyp ist unter [`prototyp/eins/`](prototyp/eins/)
+archiviert.
 
-## Hoerversuch
+## Bedienung
 
-Nach einem neuen Build das Plugin `Spectral Decay Neutral` in der DAW erneut
-laden und das Plugin-Fenster oeffnen. Der Standardeditor bietet:
+Der eigene EQ-Peak-Band-Editor stellt Frequenz und Decay als Glockenkurve dar:
 
-- **Tail amount:** Staerke des experimentellen Nachklangs; 0 ist neutral.
-  Fuer den ersten Versuch den Regler auf 1 stellen.
-- **Tail mode:** `Tonal` fuer einen tonalen Klang oder `Noise` fuer einen
-  rauschhaften Klang. Vor dem Abspielen einstellen: Ein bereits abgeklungener
-  Klang wird nicht nachtraeglich verlaengert.
-- **Low frequency / High frequency:** Untere und obere Grenze des
-  bearbeiteten Bandes in Hz. Standard: 500 bis 1500 Hz. Der Bereich ist
-  zwischen 40 und 16000 Hz waehlbar; vertauschte Grenzen werden sortiert.
+- Den **Kurvenpunkt ziehen**, um Mittenfrequenz (logarithmisch, 40–16000 Hz)
+  und Decay (`bandDecay`, −5 bis +5) einzustellen. Negative Werte verkürzen,
+  0 ist neutral, positive Werte verlängern; der Wert ist keine Zeitangabe in
+  Millisekunden.
+- Die Glockenbreite wird durch `bandQ` bestimmt (0,25–12); das **Mausrad**
+  über der Kurve ändert Q. Ein Doppelklick setzt Decay auf 0.
+- Vier gekoppelte Regler stehen für `bandFreqHz` (**Frequency**), `bandQ`
+  (**Width (Q)**), `bandDecay` (**Decay**) und `toneNoise` (**Tone / Noise**)
+  bereit. Der letzte Regler überblendet stufenlos von 0 (Tone) bis 1 (Noise).
 
-Zum Vergleich einen abklingenden Klang mit Anteilen im ausgewaehlten Bereich
-abspielen und `Tail amount` zwischen 0 und 1 vergleichen. Der Versuch
-verlaengert abfallende Signalanteile im Band, auch wenn anderes Audiomaterial
-weiterlaeuft. Er formt keine frei einstellbare Frequenzkurve und
-unterscheidet tonale und rauschhafte Anteile nicht automatisch. Die
-experimentelle spektrale Huellkurve klingt mit einer Zeitkonstante von
-400 ms ab. Die zusaetzliche Energie pro Frequenzbin wird spaetestens zwei
-Sekunden nach dem letzten erkannten Signal in diesem Bin beendet; die
-Erkennungsschwelle ist eine Versuchsannahme.
-Die Einstellungen werden im Plugin-Zustand gespeichert. Eine einfache
-Sample-Peak-Begrenzung ist nur bei
-hinzugefuegtem Tail aktiv und kein True-Peak-Schutz; laute Eingangssignale
-werden nicht grundsaetzlich begrenzt. Klangqualitaet, Ausgangspegel und
-DAW-Kompatibilitaet sind nicht abgenommen.
+Das ist ein einzelnes experimentelles Peak-Band, kein frei editierbarer
+Mehrpunkt-EQ. Dry/Wet und eigener Bypass sind nicht implementiert. Die
+Sample-Peak-Begrenzung des zusätzlichen Tails ist kein True-Peak-Limiter.
+Einstellungen werden als Zustandsversion 2 gespeichert; ungültige oder alte
+Zustände fallen sicher auf Defaults zurück.
 
-Grundlage ist der [vorgeschlagene Verlaengerungsversuch](docs/adr/0004-erster-verlaengerungsprototyp.md).
-Anders als in dessen urspruenglichem Offline-Zuschnitt ist diese Erweiterung
-bereits im Plugin bedienbar und verfolgt abfallende Bandanteile statt erst
-bei Vollbandstille einzusetzen.
+## Technischer Aufbau
 
-## Aufbau
+- STFT: FFT-Größe 2048, Hop 512, periodisches `sqrt(Hann)`, WOLA.
+- Gemeldete und gemessene Verarbeitungslatenz: 2048 Samples.
+- Bipolare Verkürzung mit stereo-gekoppelter Hüllkurve und Onset-Schutz;
+  Verlängerung mit tonalem Peak-Phase-Locking bzw. frequenzgedämpfter,
+  korrelierter stochastischer Synthese. Tone/Noise überblendet stufenlos.
+- Zusätzliche Ausgabe spätestens ab der 2,0-s-Aktivitätsgrenze exakt beendet;
+  Sample-Peak-Schutz `max(tailOutputCeiling, |dry|)`.
+- Linux-Offline-Messungen, direkte JUCE-Processor-Tests und ein Testhost, der
+  das tatsächliche VST3-Modul lädt.
 
-- Plattformunabhaengiger DSP-Kern: FFT 2048, Hop 512, sqrt(periodische Hann),
-  normiertes WOLA, immer FFT und inverse FFT; stereogekoppelte
-  Band-Huellkurven und Synthese pro Kanal.
-- JUCE-Huelle: Mono-/Stereo-Busse, Sample-Latenzmeldung, generischer Editor
-  und vier gespeicherte Versuchsparameter.
-- Deterministische Offline-Messungen, direkte Processor-Tests und ein kleiner
-  Host, der das tatsaechliche VST3-Modul laedt.
+## Nachweisstand
+
+**Prototyp 2:** Linux-x86-64-Build und alle drei CTest-Programme bestanden:
+`neutral_offline`, `neutral_processor` und `neutral_vst3_host`. Gemessene
+Latenz **2048 Samples**, größter Nullrest-Peak **9,81e-8 FS (−140,17 dBFS)**;
+Blockgrößenvergleich bitgleich für die geprüften Blöcke. Der Onset bleibt im
+Percussion-Beispiel bei **86,5–87,3 %**, während die Nachklangenergie bei
+`bandDecay = −2,5` auf **42,5–43,6 %** und bei `−5` auf **2,16–2,56 %**
+fällt. Die 2-s-Grenze, das Sample-Peak-Ceiling und eine stufenlose Tone/Noise-
+Bewegung wurden ebenfalls offline gemessen.
+
+Das sind Messbeispiele und technische Prüfungen, **keine Abnahme offener
+numerischer Klangtoleranzen**. Windows-/Ableton-Build und Hörtest von
+Prototyp 2 stehen aus; Callback-Zeiten sind Stichproben, kein
+Echtzeit-/Worst-Case-Nachweis. JUCE 9.0.5 nimmt im VST3-Wrapper vor dem
+Callback einen Lock. Vollständige Messbedingungen, Werte und Grenzen:
+[Prüfbericht Prototyp 2](docs/verification/peak-band-prototype-2.md).
+Der berichtete Windows-/Ableton-Höreindruck von Prototyp 1 ist separat im
+[Windows-/Ableton-Prüfplan](docs/verification/windows-ableton.md) bewahrt.
 
 ## Build und Tests
 
 CMake **ab 3.24**, C++17-Compiler und Internetzugang beim ersten Konfigurieren.
-Quellarchive sind durch Commit und SHA-256 fixiert. Verifizierte DSP-Befehle:
+Abhängigkeiten sind auf feste Versionen/Quellstände festgelegt. Verifizierter
+DSP-Offline-Weg (ohne JUCE und ohne Audio-Gerät):
 
 ```sh
 cmake --preset offline
@@ -62,11 +70,13 @@ cmake --build --preset offline
 ctest --preset offline
 ```
 
-Dieser DSP-Lauf benoetigt weder JUCE noch ein Audio-Geraet. Die CSV-Messwerte
-entstehen unter `out/offline/offline-metrics.csv`. Offene numerische
-Toleranzen werden dadurch **nicht** als bestanden gewertet.
+Die Offline-Messwerte werden unter `out/offline/offline-metrics.csv`
+geschrieben. `MEASUREMENT_ONLY`-Werte sind Messprotokoll, keine Abnahme
+offener Toleranzen.
 
-Windows x86-64 mit Visual Studio 2022, C++-Desktop-Workload und Windows SDK:
+### Windows x86-64: Visual Studio 2022
+
+Mit Visual Studio 2022, C++-Desktop-Workload und Windows SDK:
 
 ```powershell
 cmake --preset windows-x64
@@ -74,14 +84,11 @@ cmake --build --preset windows-x64
 ctest --preset windows-x64
 ```
 
-Alternativ mit Visual Studio 2026 und Ninja (dieser Weg ist fuer dieses
-Projekt noch nicht verifiziert): Visual Studio 2026 braucht die Workload
-**Desktopentwicklung mit C++** samt Windows SDK; Ninja muss installiert und
-im `PATH` sein. CMake 3.31 kennt den Visual-Studio-2026-Generator nicht.
-Deshalb eine **x64 Native Tools Command Prompt for VS 2026** oeffnen und mit
-`where cl` sicherstellen, dass der Compiler auf x64 zielt (z. B.
-`Hostx64\x64\cl.exe`). Das `windows-x64`-Preset nicht fuer diesen Weg
-verwenden, da es Visual Studio 2022 auswaehlt:
+### Windows x86-64: VS 2026 und Ninja
+
+Der Visual-Studio-2026-Generator wird von CMake 3.31 nicht erkannt. In einer
+x64 Native Tools Command Prompt für VS 2026 (C++-Desktop-Workload, Windows SDK,
+Ninja im `PATH`; mit `where cl` x64-Compiler prüfen) den Ninja-Weg verwenden:
 
 ```cmd
 cmake -S . -B out/windows-2026-x64 -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DSPECTRAL_DECAY_BUILD_PLUGIN=ON
@@ -89,32 +96,27 @@ cmake --build out/windows-2026-x64 --parallel 2
 ctest --test-dir out/windows-2026-x64 --output-on-failure
 ```
 
-Das Bundle liegt beim VS-2022-Preset unter
-`out/windows-x64/SpectralDecay_artefacts/Release/VST3/Spectral Decay Neutral.vst3`,
-beim VS-2026/Ninja-Weg unter
+Der VS-2022-Bundlepfad lautet
+`out/windows-x64/SpectralDecay_artefacts/Release/VST3/Spectral Decay Neutral.vst3`;
+beim VS-2026/Ninja-Weg liegt es unter
 `out/windows-2026-x64/SpectralDecay_artefacts/Release/VST3/Spectral Decay Neutral.vst3`.
-Keine automatische Installation. Details und manueller Live-Test:
-[Windows/Ableton-Test](docs/verification/windows-ableton.md).
+Windows-Build und Ableton-Hörtest von Prototyp 2 sind noch nicht belegt.
 
-Nach erfolgreichem Build und Test kann das Bundle aus PowerShell im
+Nach erfolgreichem Windows-Build und Tests kann das Bundle aus PowerShell im
 Repository-Verzeichnis exportiert werden:
 
 ```powershell
 ./scripts/export-plugin.ps1
 ```
 
-Das Skript verwendet standardmaessig `out/windows-2026-x64`; fuer den
-VS-2022-Preset den Build-Ordner mit
-`-BuildDirectory out/windows-x64` angeben.
+Das Skript verwendet standardmäßig `out/windows-2026-x64`; für das
+VS-2022-Preset `-BuildDirectory out/windows-x64` angeben. Export und
+manueller Windows-Workflow sind keine Linux-Binärdatei-Umetikettierung.
+Details: [Windows-/Ableton-Prüfplan](docs/verification/windows-ableton.md)
+und [Exportweg](docs/verification/export.md). Es wurde hier kein
+Windows-Workflow ausgelöst und kein Windows-Artefakt erzeugt.
 
-Der [Windows-Exportweg](docs/verification/export.md) erzeugt nach erfolgreichen
-Tests `plugin-export/spectral-decay.vst3`. Nach einem bewussten Commit/Push
-kann der manuelle Workflow **Windows prototype export** ein herunterladbares
-ZIP unter **Actions -> Lauf -> Artifacts -> spectral-decay-windows-x64**
-bereitstellen. Hier wurde kein Workflow gestartet und noch kein
-Windows-Binaerartefakt erzeugt.
-
-Fuer einen zusaetzlichen Linux-VST3-Build:
+### Zusätzlicher Linux-VST3-Build
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
@@ -122,56 +124,17 @@ cmake --build build --parallel 2
 ctest --test-dir build --output-on-failure
 ```
 
-Unter Ubuntu benoetigen die JUCE-GUI-Module
-die Entwicklungsheader von X11/Xext/Xrandr/Xinerama/Xcursor/Xi,
-FreeType und Fontconfig. Im Versuch fehlten `libxrandr-dev`,
-`libxinerama-dev`, `libxcursor-dev` und `libxi-dev`; nach deren Installation
-war der vollstaendige Build erfolgreich.
-
-**Nachweisstand des vorherigen neutralen Builds:** Linux-x86-64-Build und
-**3/3 CTest-Programme erfolgreich**. Die Offline-Matrix lieferte 1438
-bestandene harte Strukturchecks und
-3776 reine Messzeilen. Gemeldete und gemessene Latenz: **2048 Samples**;
-groesster Nullrest-Peak **-127,59 dBFS**, groesster Nullrest-RMS
-**-141,74 dBFS**; Blockgroessendifferenz im Versuch **0**.
-Diese Messwerte sind keine Abnahme offener Klangtoleranzen.
-Einzelheiten zum neutralen Build: [Pruefprotokoll](docs/verification/neutral-prototype.md).
-Der aktuelle Tail-Versuch und seine Grenzen sind separat im
-[Pruefbericht zum Tail-Prototyp](docs/verification/tail-prototype.md)
-dokumentiert.
-
-**Vorherige Erweiterung:** Linux-Build und 3/3 CTest-Programme erfolgreich;
-1914 Strukturchecks und 4180 Messzeilen im Offline-Lauf. Tonale und
-rauschhafte Testbursts erzeugten einen Tail, auch bei 10 ms Burstlaenge.
-Der Nutzer berichtet, dass der erweiterte Prototyp unter Windows laedt,
-aber bei seinem Material keine Wirkung zeigte.
-
-**Frequenzwahl und Korrektur:** Linux-Build und 3/3 CTest-Programme
-erfolgreich; 2350 Strukturchecks und 4500 Messzeilen im Offline-Lauf.
-Bei 48 kHz, Blockgroesse 257 und einem abklingenden 1-kHz-Ton mit
-gleichzeitigem 8-kHz-Dauerton ist bei `Tail amount` 1 gegenueber 0 ein
-Unterschied messbar; beim bisherigen Stand war er im Testfenster exakt 0.
-Geprueft wurden auch zwei Sampleraten, vier Blockgroessen, beide Modi,
-Stereo, Zustandsuebernahme und das geladene VST3-Modul. Die offenen
-Klangtoleranzen sind damit nicht abgenommen. Windows-/Ableton- und
-Hoertest des neuen Stands stehen aus.
-
-Eine stichprobenartige lokale Stereo-Callback-Messung mit aktivem Tail
-ueberschritt bei 44,1 kHz und 64 Samples einmal das Blockzeitbudget: 4,13 ms
-gegenueber 1,45 ms (vorherige Erweiterung). Im aktuellen Stand wurden bei
-48 kHz, 64 Samples, Stereo und aktivem Band 40-16000 Hz bei einem
-abklingenden Rauschsignal maximal 0,208 ms CPU-Zeit pro Block gemessen;
-das Budget betraegt 1,333 ms. Beide Messungen sind Stichproben auf Linux in
-einer geteilten Umgebung; Aussetzer koennen nicht ausgeschlossen werden.
-Ein Echtzeit- oder CPU-Grenznachweis fehlt.
+Die JUCE-GUI-Module benötigen unter Ubuntu die Entwicklungsheader von
+X11/Xext/Xrandr/Xinerama/Xcursor/Xi, FreeType und Fontconfig. Die
+Linux-VST3-Prüfung belegt nicht die Kompatibilität mit Windows oder Ableton.
 
 ## Lizenz und Grenzen
 
-Eigener Code: **AGPL-3.0-or-later**, siehe [LICENSE](LICENSE).
-JUCE, VST3-SDK und PFFFT haben getrennte Lizenzbedingungen:
+Eigener Code: **AGPL-3.0-or-later**, siehe [LICENSE](LICENSE). JUCE,
+VST3-SDK und PFFFT haben getrennte Lizenzbedingungen; siehe
 [Drittanbieterinventar](THIRD_PARTY_NOTICES.md).
 
-Der eigene Audio-Pfad ist auf vorallokierten Speicher und begrenzte Arbeit
-ausgelegt. **Kein vollstaendiger Echtzeitnachweis:** Insbesondere nimmt
-JUCE 9.0.5 im VST3-Wrapper vor unserem Callback einen Callback-Lock.
-Dieser Framework-Lock wird nicht durch einen ungeprueften Vendor-Patch entfernt.
+Es fehlt ein vollständiger Echtzeitnachweis, insbesondere für den JUCE-VST3-
+Gesamtpfad mit dessen Wrapper-Lock. Windows-/Ableton-Hörtest von Prototyp 2,
+True-Peak-Prüfung, verbindliche numerische Neutralitäts-/Klangtoleranzen und
+Produktfreigabe bleiben offen.

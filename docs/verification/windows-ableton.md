@@ -1,9 +1,29 @@
 # Windows-x86-64- und Ableton-Live-12-Test
 
-**Status:** Der Nutzer berichtet, dass der neutrale Prototyp unter Windows
-gebaut wurde und das Plugin laedt. Ein dokumentierter Windows-/Ableton-Test
-der Erweiterung mit Versionsangaben und Hoerpruefung steht noch aus.
-Linux-Pruefungen sind kein Ersatz.
+**Status (Stand 2026-11-15):** Für Prototyp 1 liegt der berichtete
+Windows-/Ableton-Hörbefund unten vor; der Quellstand ist unter
+[prototyp/eins](../../prototyp/eins/) archiviert. Prototyp 2 ist inzwischen
+implementiert und unter Linux technisch geprüft. Windows-x86-64-Build,
+Ableton-Live-12-Test und Hörtest von P2 stehen noch aus; formale Messreihen,
+Quellrevision, Versionen, Audiointerface, Samplerate, Puffer, Buslayout und
+Testmaterial sind dafür zu protokollieren. Linux-Prüfungen ersetzen diese
+Nachweise nicht. Messwerte und offene Grenzen: [Prüfbericht Prototyp 2](peak-band-prototype-2.md).
+
+## Berichteter Prototyp-1-Hoerbefund
+
+Der Auftraggeber berichtete am 2026-11-15 nach Windows-Build und
+Ableton-Hoertest von Prototyp 1 folgende fünf Beobachtungen:
+
+1. Der Tail liess sich nur positiv verlaengern, nicht verkuerzen.
+2. Tone/Noise war binaer statt stufenlos.
+3. Zwei Frequenzschieber (Low/High) dienten der Bandwahl.
+4. Noise klang „hallig“.
+5. Tone klang „granular“.
+
+Dies sind berichtete Hoereindruecke und Bedienungsbeobachtungen; ein
+Testprotokoll mit Messreihen und Versions-/Umgebungsdaten liegt nicht vor. Sie
+begründen die Untersuchung in [Spec Prototyp 2](../specs/prototyp-zwei-peak-band.md),
+stellen aber weder die formale Host-Abnahme noch eine Produktfreigabe dar.
 
 ## 1. Build und Offline-Hosttest
 
@@ -54,8 +74,12 @@ erfuellt sind, **nicht**, dass offene Neutralitaetstoleranzen abgenommen wurden.
    separat bestaetigen; dieses Projekt kopiert dorthin nichts automatisch.
 3. VST3-Scan aktivieren, scannen und `Spectral Decay Neutral` laden
    (exportierter Bundle-Dateiname: `spectral-decay.vst3`).
-   Der JUCE-Standardeditor bietet `Tail amount`, `Tail mode` und
-   `Low frequency` / `High frequency` in Hz.
+   Prototyp 2 öffnet den eigenen Peak-Band-Editor: Die EQ-Glocke hat eine
+   logarithmische Frequenzachse (40–16000 Hz) und eine bipolare Decay-Achse
+   (−5 bis +5). Den Kurvenpunkt ziehen, um Mittenfrequenz und kürzer/länger
+   einzustellen; Mausrad ändert die Breite `Q`. Vier gekoppelte Regler bieten
+   zusätzlich `Frequency`, `Width (Q)`, `Decay` und `Tone / Noise` (0–1,
+   stufenlos). Doppelklick auf die Kurve setzt Decay auf 0.
    Nach einem neuen Build das aktualisierte Bundle verwenden und in Live
    bei Bedarf erneut scannen.
 4. Bei 44,1 und 48 kHz bekannte Impulse, Sweep und Rauschburst durchleiten.
@@ -69,15 +93,17 @@ erfuellt sind, **nicht**, dass offene Neutralitaetstoleranzen abgenommen wurden.
    kompensierter Render darf nicht nochmals um die Plugin-Latenz verschoben
    werden. Fuer den samplegenauen Roh-Latenznachweis den obigen Test-Host
    verwenden; eine gerundete Millisekundenanzeige in Live reicht nicht.
-7. Audioausgabe, Dropouts/Fehler und Hoereindruck protokollieren. Mit
-   Regler 0 neutral vergleichen; dann einen abklingenden tonalen Klang bzw.
-   Rauschklang im ausgewaehlten Band abspielen und mit erhoehtem Tail-Regler
-   und passendem Modus testen. Auch bei laufendem Signal ausserhalb des
-   Bandes vergleichen. Kein Hoertest
-   ersetzt den Nulltest. Der Versuch bietet keine Verkuerzung, keinen
-   Kurveneditor, kein Dry/Wet, keinen eigenen Bypass und keinen
-   True-Peak-Schutz. Einen Tail-Modus vor dem Abspielen einstellen; ein
-   bereits abgeklungener Klang wird nicht nachtraeglich verlaengert.
+7. Audioausgabe, Dropouts/Fehler und Höreindruck protokollieren. Zunächst
+   mit `bandDecay = 0` neutral vergleichen; danach einen Kick-/Transienten,
+   einen abklingenden Ton und bandbegrenztes Rauschmaterial mit positiven und
+   negativen Decay-Werten abhören. Die Bedienung des Kurvenpunkts, Q per
+   Mausrad und der stufenlose Tone/Noise-Regler ist Teil des Tests. Auch ein
+   weiterlaufendes Signal außerhalb des Peak-Bands verwenden. Gezielt fragen:
+   **„Verkürzt `< 0` den Ausklang ohne den Attack zu zerstören?“** und
+   **„Klingt Tone weniger granular und Noise weniger hallig?“** Diese Fragen
+   prüfen P2-Hypothesen; sie ersetzen weder den latenzkompensierten Nulltest
+   noch eine formale Produktabnahme. Prototyp 2 hat keinen Dry/Wet-Regler,
+   keinen eigenen Bypass und keinen True-Peak-Nachweis.
 
 ## Ergebnisvorlage
 

@@ -31,7 +31,7 @@ if(UNIX)
     target_link_libraries(spectral_pffft PUBLIC m)
 endif()
 
-add_library(spectral_decay_dsp STATIC src/dsp/NeutralStft.cpp)
+add_library(spectral_decay_dsp STATIC src/dsp/PeakBandStft.cpp)
 target_include_directories(spectral_decay_dsp PUBLIC src)
 target_link_libraries(spectral_decay_dsp PRIVATE spectral_pffft)
 target_compile_features(spectral_decay_dsp PUBLIC cxx_std_17)
@@ -72,7 +72,7 @@ if(SPECTRAL_DECAY_BUILD_PLUGIN)
         EDITOR_WANTS_KEYBOARD_FOCUS FALSE
         COPY_PLUGIN_AFTER_BUILD FALSE
         VST3_CATEGORIES Fx)
-    target_sources(SpectralDecay PRIVATE src/plugin/PluginProcessor.cpp)
+    target_sources(SpectralDecay PRIVATE src/plugin/PluginProcessor.cpp src/plugin/PluginEditor.cpp)
     target_include_directories(SpectralDecay PUBLIC src)
     target_compile_definitions(SpectralDecay PUBLIC
         JUCE_WEB_BROWSER=0
@@ -83,19 +83,20 @@ if(SPECTRAL_DECAY_BUILD_PLUGIN)
     target_link_libraries(SpectralDecay PRIVATE
         spectral_decay_dsp
         juce::juce_audio_processors
+        juce::juce_gui_basics
         PUBLIC juce::juce_recommended_config_flags)
 
     if(BUILD_TESTING)
         add_executable(spectral_decay_processor_tests tests/ProcessorTests.cpp)
         target_link_libraries(spectral_decay_processor_tests PRIVATE
-            SpectralDecay juce::juce_audio_processors)
+            SpectralDecay juce::juce_audio_processors juce::juce_gui_basics)
         add_test(NAME neutral_processor COMMAND spectral_decay_processor_tests)
 
         add_executable(spectral_decay_vst3_host_tests tests/Vst3HostTests.cpp)
         target_compile_definitions(spectral_decay_vst3_host_tests PRIVATE
             JUCE_PLUGINHOST_VST3=1 JUCE_USE_CURL=0 JUCE_WEB_BROWSER=0)
         target_link_libraries(spectral_decay_vst3_host_tests PRIVATE
-            juce::juce_audio_processors_headless)
+            juce::juce_audio_processors_headless juce::juce_gui_basics juce::juce_core juce::juce_data_structures)
         add_dependencies(spectral_decay_vst3_host_tests SpectralDecay_VST3)
         add_test(NAME neutral_vst3_host COMMAND spectral_decay_vst3_host_tests
             "$<TARGET_FILE_DIR:SpectralDecay_VST3>/../..")

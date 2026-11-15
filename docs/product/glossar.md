@@ -1,6 +1,7 @@
 # Glossar: Spectral Decay
 
 Dieses Glossar schafft eine gemeinsame Sprache für Produkt, Entwicklung und Tests.
+Der Auftraggeber berichtete am 2026-11-15 qualitativ über einen Windows-/Ableton-Hörtest von Prototyp 1. Der Übergang zu Prototyp 2 ist ein experimenteller Schritt, keine Änderung langfristiger Produktziele; siehe [Prototyp-2-Spec](../specs/prototyp-zwei-peak-band.md).
 Es beschreibt die Begriffe aus der [Produktvision](product-vision.md); es legt
 keine neuen Anforderungen, Messverfahren oder Akzeptanzschwellen fest. Ein
 experimenteller Plugin-Prototyp existiert, bildet aber nur einen Teil des
@@ -13,6 +14,10 @@ Produktziels ab.
 | **Ausklang / Decay** | Der zeitliche Verlauf eines Klanganteils nach seinem Anregungs- oder Einschwingvorgang. Er kann in verschiedenen Frequenzbereichen unterschiedlich verlaufen. |
 | **Abklingzeit** | Zeitangabe für den Ausklang eines Klanganteils. Ihre genaue Definition und Messung sind noch offen; die Bedienwerte der Decay-Kurve sind keine zugesagten Millisekundenwerte. |
 | **Frequenzbereich / Band** | Ein Abschnitt des Frequenzspektrums, dessen zeitlicher Verlauf gezielt bearbeitet oder gemessen wird. Grenzen und Breite sind nicht allgemein festgelegt. |
+| **Peak-Band** | Für Prototyp 2 untersuchtes EQ-artiges Einzelband mit einer Mittenfrequenz und einer durch Q bestimmten Glockenbreite. Es steuert die Frequenzselektivität der zeitlichen Bearbeitung, nicht eine statische EQ-Pegelkurve. |
+| **Güte / Q** | Parameter für die Breite des Peak-Bands: kleines Q bedeutet breit, großes Q eng beziehungsweise schmalbandig. Die genaue Q-zu-Bandbreiten-Abbildung im Prototyp 2 ist offen. |
+| **Bipolarer Decay-Wert** | Abstrakter Wert mit neutralem Mittelpunkt 0: negative Werte sollen den Ausklang verkürzen, positive ihn verlängern. Er ist keine Abklingzeit in Millisekunden. Prototyp 2 untersucht den Bereich −5 bis +5. |
+| **Tone/Noise-Übergang** | Stufenloser Prototyp-2-Parameter von tonal (0) zu rauschhaft (1), mit Zwischenwerten. Dass der Übergang Artefakte reduziert, ist eine zu prüfende Hypothese, keine zugesicherte Produkteigenschaft. |
 | **Verkürzung** | Bearbeitung, durch die ein ausgewählter Frequenzbereich schneller abklingt als im Eingangssignal. |
 | **Verlängerung** | Bearbeitung, durch die ein ausgewählter Frequenzbereich länger ausklingt als im Eingangssignal. Sie soll vorhandenen Klangcharakter fortführen, keinen unabhängigen Raumklang hinzufügen. |
 | **Transient** | Kurzer, schneller Signalvorgang, etwa der Anschlag einer Kickdrum. Sein Verhalten soll bei der Bearbeitung besonders beachtet werden. |

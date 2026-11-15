@@ -74,14 +74,26 @@ Decay-Kurve. Ein technischer Prototyp darf schrittweise entstehen; der erste
 Entwicklungs-Build ist erst dann vollständig, wenn beide Bearbeitungsrichtungen
 gleichzeitig in verschiedenen Frequenzbereichen hörbar funktionieren.
 
-**Stand des vorhandenen Prototyps:** Implementiert sind ein neutraler STFT-
-Signalweg und ein begrenzter, experimenteller Verlängerungszweig mit
-generischem Editor. Es gibt noch keine Verkürzung, keinen Kurveneditor, kein
-Dry/Wet und keinen eigenen Bypass; der Tail-Schutz ist kein True-Peak-Schutz.
-Die vier Versuchsparameter werden im Plugin-Zustand gespeichert. Der
-Prototyp erfüllt damit noch nicht den beschriebenen ersten Entwicklungs-Build;
-Einzelheiten und Nachweise stehen im
-[Prüfbericht zum Tail-Prototyp](../verification/tail-prototype.md).
+**Stand des vorhandenen Prototyps:** Prototyp 1 ist nach dem berichteten
+Windows-/Ableton-Hörtest unter [`prototyp/eins/`](../../prototyp/eins/)
+archiviert. Im Hauptbaum ist Prototyp 2 implementiert: ein neutrales
+STFT-Verfahren mit bipolarem EQ-Peak-Band, stufenlosem Tone/Noise-Übergang
+und eigenem Kurveneditor. Die Linux-x86-64-Prüfung bestand 3/3 CTest-Programme;
+Nullrest, Latenz, Richtungswirkung und weitere Messbeispiele samt Grenzen
+stehen im [Prüfbericht Prototyp 2](../verification/peak-band-prototype-2.md).
+Der technische Stand ist keine Produktabnahme: Windows-/Ableton-Hörtest,
+verbindliche numerische Toleranzen, True-Peak-Nachweis, Dry/Wet und ein
+produktreifer Mehrpunkt-Kurveneditor bleiben offen. P1-Befunde und der
+Zwischenstand sind weiterhin im [Tail-Prüfbericht](../verification/tail-prototype.md)
+dokumentiert.
+
+**Prototyp 2 (experimentell):** Der begrenzte Versuch untersucht ein
+EQ-artiges **Peak-Band** (`bandFreqHz`, `bandQ`), einen **bipolaren
+Decay-Wert** (`bandDecay`: verkürzen / neutral / verlängern) und einen
+stufenlosen **Tone/Noise-Übergang** (`toneNoise`). Er ändert weder die
+langfristige Vision für eine mehrpunktige Decay-Kurve noch nimmt er offene
+numerische Toleranzen ab. Umfang und Kriterien stehen in der
+[Prototyp-2-Spec](../specs/prototyp-zwei-peak-band.md).
 
 ## Erfolgskriterien
 
