@@ -113,9 +113,13 @@ nicht erbracht.
 - **Offen – Produktverantwortung mit Test/Entwicklung:** Welche Testmatrix,
   Signalparameter, Auswertungsfenster und Akzeptanzgrenzen werden nach dem
   Prototyp verbindlich? Welche Mono-/Stereo-Layouts gehören dazu?
-- **Offen – Entwicklung mit Produktverantwortung:** Welche Plattform und
-  welcher Host eignen sich für den ersten VST3-Nachweis? Welche Architektur,
-  Abhängigkeiten und Lizenzen werden dafür freigegeben?
+- **Freigegeben – Produktverantwortung:** STFT als neutraler
+  Untersuchungspfad, Windows x86-64 und AGPLv3 als Lizenzrichtung; siehe
+  [Architektur](../adr/0001-prototyp-architektur.md) und
+  [Lizenzmodell](../adr/0002-lizenzmodell.md).
+- **Offen – Entwicklung mit Produktverantwortung:** Welcher Test-Host und
+  welche konkreten Abhängigkeiten, Versionen und Lizenzdetails eignen sich
+  für den ersten VST3-Nachweis?
 - **Offen – Test/Entwicklung:** Wie werden Nulltest, Frequenzabweichung,
   Impulslatenz, Stille und Blockgrößenvergleich genau ausgewertet?
 
@@ -126,9 +130,9 @@ nicht erbracht.
 - **Geplant:** VST3-Host-Test für AK2 und AK5; Hörvergleich als ergänzende,
   dokumentierte Prüfung, nicht als Ersatz für den Nulltest.
 - **Noch nicht ausführbar:** Es gibt derzeit weder Plugin-Code noch
-  Build-System, Tests oder einen ausgewählten Host. Kein Audio-, Host- oder
+  Build-System, Tests oder einen ausgewählten VST3-Test-Host. Kein Audio-, Host- oder
   Echtzeitverhalten wurde durch diesen Entwurf nachgewiesen.
-- **Freigaben:** Lesen und Dokumentation sind umfasst. Implementierung,
-  Architekturentscheidungen, neue Abhängigkeiten oder Lizenzen und externe
-  Aktionen bedürfen eines gesonderten Auftrags beziehungsweise der erforderlichen
-  Zustimmung.
+- **Freigaben:** Die dokumentierte Architektur- und Lizenzrichtung ist
+  freigegeben. Implementierung, konkrete Abhängigkeiten und deren Versionen
+  sowie externe Aktionen bedürfen eines gesonderten Auftrags beziehungsweise
+  der erforderlichen Zustimmung.

@@ -40,13 +40,18 @@ Release; wiederherstellbare Einstellungen bleiben ein späteres Produktziel.
   rechtlich geklärten Grundlage möglich.
 - **Ergebnis:** Vorschlag für JUCE-/C++-Build, VST3, Test-Host und
   plattformübergreifende Struktur; Vergleich von Lizenzoptionen und
-  Architekturentscheidungen. Open Source ist angestrebt, die konkrete Lizenz
-  und Windows-Prozessorarchitektur sind offen.
+  Architekturentscheidungen. Open Source ist angestrebt; Rechteinhaber und
+  konkrete Abhängigkeiten sind offen.
 - **Prüfung:** Verantwortliche Person entscheidet über Abhängigkeiten,
   Lizenzmodell, Architektur und Prototypauftrag. Windows-/Ableton-Testweg
   dokumentieren; tatsächlichen Host-Test nicht durch einen Linux-Build
   ersetzen.
-- **Status:** Vorbereitung nötig; keine Abhängigkeit oder Architektur freigegeben.
+- **Vorbereitung:** [Architekturvorschlag](../adr/0001-prototyp-architektur.md)
+  und [Lizenzoptionen](../adr/0002-lizenzmodell.md); STFT-Untersuchungspfad,
+  AGPLv3-Lizenzrichtung und Windows x86-64 wurden am 15. November 2026
+  freigegeben.
+- **Status:** Konkrete Abhängigkeiten, Rechteinhaber und Prototypauftrag
+  weiterhin offen; noch keine Implementierung freigegeben.
 
 ### PB-02 – Neutraler spektraler Durchlauf
 
@@ -158,9 +163,10 @@ Release; wiederherstellbare Einstellungen bleiben ein späteres Produktziel.
 
 ## Noch zu klären
 
-1. **Produktverantwortung / Architektur:** konkrete Open-Source-Lizenz,
-   JUCE-Lizenzmodell, Abhängigkeiten, Windows-Architektur und konkrete
-   Entwicklungs- und Testumgebung.
+1. **Produktverantwortung / Architektur:** Rechteinhaber, konkrete
+   Abhängigkeiten und Versionen sowie Entwicklungs-
+   und Testumgebung. Die Windows-x86-64-Umgebung mit Live 12 ist laut
+   Produktverantwortung verfügbar.
 2. **Produktverantwortung / Test:** geeignete Audio-Messdefinition,
    Testsignale, Messfenster, Neutralitäts- und Richtungstoleranzen; wie stark
    −5 beziehungsweise +5 wirken sollen.

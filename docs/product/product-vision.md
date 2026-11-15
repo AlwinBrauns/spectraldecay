@@ -58,7 +58,7 @@ Spectral Decay ist weder ein klassischer Lautstärke-EQ noch ein allgemeiner Hal
 
 ## Erster Entwicklungs-Build
 
-Der erste Entwicklungs-Build soll als VST3-Plugin auf Basis von JUCE und C++ laufen und zunächst unter Windows in Ableton Live 12 erprobt werden. Plattformübergreifender Quellcode und eine spätere Open-Source-Veröffentlichung sind Ziele; Prozessorarchitektur und Lizenzmodell sind noch offen. Er soll folgende Kernfunktionen demonstrieren:
+Der erste Entwicklungs-Build soll als VST3-Plugin auf Basis von JUCE und C++ laufen und zunächst unter Windows in Ableton Live 12 erprobt werden. Plattformübergreifender Quellcode und eine spätere Open-Source-Veröffentlichung sind Ziele. Für den neutralen Prototyp wurden Windows x86-64 und ein STFT-Untersuchungspfad sowie AGPLv3 als Lizenzrichtung freigegeben; konkrete Abhängigkeiten und Lizenzdetails bleiben offen. Siehe [Architektur](../adr/0001-prototyp-architektur.md) und [Lizenzmodell](../adr/0002-lizenzmodell.md). Er soll folgende Kernfunktionen demonstrieren:
 
 - Einen neutralen, überprüfbaren spektralen Signaldurchlauf.
 - Eine während der Wiedergabe editierbare Decay-Kurve; vorläufig drei verschiebbare Punkte, fließende Übergänge und eine Skala von −5 bis +5.
