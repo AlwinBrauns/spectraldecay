@@ -63,3 +63,17 @@ Prototyps festgelegt.
 | Zielwert | Vorläufig maximal zwei Sekunden nach Eingangsstille |
 | Priorität / Risiko | Vorschlag: hoch, da unerwünscht lange Nachklänge den Mix beeinträchtigen können |
 | Prüfung | Endliche synthetische Signale, anschließende Stille und weiterhin anliegende Signale; Messwerte bis zur Klärung der Bedingungen nur berichten |
+
+## QS-05 – Echtzeitverhalten der STFT-FFT
+
+| Feld | Inhalt |
+| --- | --- |
+| Qualitätsmerkmal | Leistungseffizienz / Zuverlässigkeit |
+| Auslöser | Fortlaufende Verarbeitung jeder STFT-Framegrenze im neutralen Pfad |
+| Umgebung | Vorgeschlagen: Windows x86-64 Releasebuild; 44,1 und 48 kHz; Mono und Stereo; Hostblöcke 1, 64, 512 und eine ungerade Größe. DSP-Harness zusätzlich unter Linux. Hardware und Hostmessmethode offen. |
+| Artefakt | Plattformunabhängiger DSP-Kern, FFT-Adapter und JUCE-Processor-Callback |
+| Erwartete Reaktion | FFT-Setup und Speicher sind vor dem Callback vorbereitet. Im Callback erfolgen keine Heap-Allokationen, Locks, I/O oder Logs; die Arbeit pro Block bleibt begrenzt und die Ausgabe bleibt endlich. |
+| Messgröße | Anzahl beobachteter Allokationen/Locks im Callback; Zeit pro Block und Worst-Case-Zeit im Verhältnis zur Blockdauer; Nullrest und Impulslatenz separat gemäß QS-01/QS-02. |
+| Zielwert | 0 Callback-Allokationen und 0 Callback-Locks als Muss; CPU-Grenze, Messdauer, Referenzhardware und Neutralitätstoleranz offen – nach dem Prototyp festzulegen. |
+| Priorität / Risiko | Vorschlag: hoch, da ein Callback-Lock Dropouts oder unbegrenztes Warten verursachen kann und die FFT den Kern des spektralen Pfads bildet. |
+| Prüfung | Statischer Quellreview plus Instrumentierung im freigegebenen FFT-Harness; danach Hosttest. Messwerte ohne abgestimmte CPU-/Nullrestgrenze nur berichten. |

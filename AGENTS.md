@@ -4,9 +4,12 @@ Spectral Decay ist ein geplantes VST3-Plugin (JUCE, C++), das die Abklingzeit ei
 
 ## Projektstand
 
-- Bisher existieren Produktvision, Glossar, Business Goals und ein Produkt-Backlog sowie erste Spec- und Qualitätsszenario-Entwürfe. Es gibt **noch keinen Code, kein Build-System und keine Tests**.
-- Build-, Test- und Formatbefehle sind **offen**. Sobald sie existieren, hier eintragen; bis dahin keine Befehle erfinden.
+- Es gibt einen experimentellen neutralen STFT-Prototyp mit CMake und Offline-/Processor-/VST3-Hosttests. Linux-x86-64-Build und alle drei Tests sind nachgewiesen; Windows-/Ableton-Nachweise stehen aus.
+- Verifizierte DSP-Befehle: `cmake --preset offline`, `cmake --build --preset offline`, `ctest --preset offline`. Verifizierter Linux-VST3-Weg: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON`, `cmake --build build --parallel 2`, `ctest --test-dir build --output-on-failure`. Windows-Preset `windows-x64` ist angelegt, aber nicht unter Windows ausgeführt. CMake ab 3.24, C++17; kein Formatwerkzeug festgelegt.
 - Keine Toleranzen oder Akzeptanzschwellen festlegen, die die Vision ausdrücklich offen lässt – als Annahme oder offene Frage markieren.
+- Mess-/Nachweisstand: [Prüfprotokoll](docs/verification/neutral-prototype.md), [Windows/Ableton-Plan](docs/verification/windows-ableton.md). Ein grüner Testlauf wäre keine Abnahme offener numerischer Toleranzen.
+- Eigener Code: `AGPL-3.0-or-later`; JUCE, SDK und FFT separat prüfen, siehe [Drittanbieterinventar](THIRD_PARTY_NOTICES.md). Keine Abhängigkeiten über bewegliche Tags beziehen.
+- Windows-Export: [Skript](scripts/export-plugin.ps1) und ausschließlich manuell ausgelöster [Workflow](.github/workflows/windows-prototype.yml). Erst nach tatsächlichen Windows-Tests als Windows-Artefakt ausgeben; Linux-Module nicht umetikettieren.
 
 ## Ablage
 

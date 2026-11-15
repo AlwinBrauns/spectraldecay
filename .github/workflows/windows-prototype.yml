@@ -1,0 +1,41 @@
+name: Windows prototype export
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-x64:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Configure with all tests enabled
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DBUILD_TESTING=ON
+      - name: Build plugin and all test executables
+        run: cmake --build build --config Release --parallel 2
+      - name: Test and export the complete Windows VST3 bundle
+        shell: pwsh
+        run: ./scripts/export-plugin.ps1 -BuildDirectory build
+      - name: Include corresponding sources and measurements
+        shell: pwsh
+        run: |
+          git archive --format=zip --output=plugin-export/spectral-decay-source.zip HEAD
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Push-Location build/_deps
+          cmake -E tar cf ../../plugin-export/dependency-sources.tar --format=gnutar juce-src pffft-src
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Pop-Location
+          Copy-Item build/offline-metrics.csv plugin-export/
+          Copy-Item build/Testing/Temporary/LastTest.log plugin-export/
+          git rev-parse HEAD | Set-Content plugin-export/source-revision.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload bundle, sources, notices and measurements
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: spectral-decay-windows-x64
+          path: plugin-export/
+          if-no-files-found: error
+          retention-days: 14

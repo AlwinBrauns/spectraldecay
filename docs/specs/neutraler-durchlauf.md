@@ -1,7 +1,8 @@
 # Neutraler spektraler Durchlauf
 
-Status: Entwurf  
-Spec-Stufe: Spec First
+Status: Offline/Linux-VST3 verifiziert; numerische Abnahme und Windows-Nachweis offen
+
+Spec-Stufe: Spec Anchored
 
 ## Ziel und Bedarf
 
@@ -27,19 +28,42 @@ vollständige erste Entwicklungs-Build.
   als erledigt beansprucht.
 - **Betroffen:** Audioverarbeitung, Plugin-/Host-Schnittstelle und
   Testumgebung. Eine konkrete Engine-Architektur oder GUI wird nicht festgelegt.
-- **Belegt:** In der späteren Kurvenbedienung soll der Wert 0 einen Bereich
-  neutral lassen. Für diesen Zwischenstand ist die Aktivierung eines internen
-  neutralen Testzustands noch offen. Ein direkter Bypass weist den spektralen
-  Durchlauf nicht nach.
+- **Freigegeben am 15.11.2026:** Dieser Prototyp verarbeitet immer neutral
+  durch FFT und inverse FFT, ohne Aktivierungsschalter und ohne direkten
+  Bypass. Die spätere Kurvenbedienung bleibt außerhalb dieses Auftrags.
+
+## Freigaben aus dem Interview
+
+**Belegt:** Die Produktverantwortung hat Abhängigkeiten nach erfolgreicher
+Lizenzprüfung, Versuchsaufbau und Messungen vor verbindlichen Toleranzen
+ausdrücklich bestätigt und anschließend die Umsetzung beauftragt.
+
+- JUCE 9.0.5 und PFFFT v1.3.0 an den vollständigen Commits und Archivhashes
+  des [Buildmanifests](../../CMakeLists.txt); VST3-SDK 3.8.0 aus JUCE.
+  Eigener Code AGPL-3.0-or-later; getrennte Fremdlizenzen siehe
+  [Inventar](../../THIRD_PARTY_NOTICES.md).
+- FFT 2048, Hop 512, sqrt(periodische Hann) für Analyse und Synthese,
+  normiertes WOLA. Versuchskonfiguration, keine Entscheidung über spätere
+  Decay-Verarbeitung. Die tatsächliche Latenz muss am Impuls geprüft werden.
+- Genau ein Mono- oder Stereo-Ein-/Ausgangsbus, gleiche Layouts, unabhängige
+  Kanäle. Kein Mono/Stereo-Upmix oder Downmix.
+- Ein 0-Sample-Block ist ein No-op. Reset und erneutes Prepare löschen den
+  Zustand; Sampleratenwechsel über erneutes Prepare.
+- Nichtendliche Ausgaben sind Fehler. Bei eindeutigem Impulsmaximum muss
+  die gemessene der gemeldeten Sample-Latenz exakt entsprechen. Bei
+  mehrdeutigen Maxima kein erfolgreicher Latenznachweis.
+- Windows-/Ableton-Test später durch die Produktverantwortung nach
+  [Anleitung](../verification/windows-ableton.md); genaue Versionen bis
+  zur Durchführung offen. Kein solcher Test wurde durchgeführt.
 
 ## Messbedingungen
 
-**Vorschlag zur Abstimmung:** Offline-Tests bei 44,1 und 48 kHz mit
-Blockgrößen 1, 64, 512 und einer festzulegenden ungeraden Größe; Mono und
-Stereo, sofern beide Layouts unterstützt werden. Je Test Eingangs- und
+**Für den Versuch freigegeben:** Offline-Tests bei 44,1 und 48 kHz mit
+Blockgrößen 1, 64, 512 und 257; Mono und Stereo. Je Test Eingangs- und
 Ausgangskanäle getrennt auswerten. Einheitsimpuls, Impulsfolge, Sinus-Sweep,
-deterministischer Rauschburst und Stille verwenden; konkrete Pegel, Längen,
-Seed, Sweep-Bereich und Messfenster vor einer verbindlichen Abnahme festlegen.
+deterministischer Rauschburst, Stille und Signale nahe Vollaussteuerung.
+Signalparameter und Auswertung sind reproduzierbar im Testprogramm
+festgelegt; siehe [Prüfprotokoll](../verification/neutral-prototype.md).
 Ein- und Ausschwingbereiche sowie die nachfolgend ausgegebene Latenz und
 gegebenenfalls Restsignale müssen im Vergleich erfasst werden.
 
@@ -66,8 +90,9 @@ separat beauftragter Prototyp darf zuvor Messwerte zur Festlegung liefern.
 - **AK2 – Latenz:** Gegeben ein Einheitsimpuls nach dem Zurücksetzen unter den
   abgestimmten Messbedingungen, wenn das Plugin ihn neutral verarbeitet,
   dann entspricht die gemessene Verzögerung in Samples der an den Host
-  gemeldeten Latenz. **Messposition des Impulses und Vorgehen bei mehrdeutigem
-  Maximum offen;** siehe
+  gemeldeten Latenz. **Versuchsverfahren freigegeben:** Impulse an Start,
+  Block-/Hop-/Fenstergrenzen; eindeutiges Betragsmaximum exakt vergleichen,
+  mehrdeutige Maxima ausdrücklich als fehlenden Nachweis melden; siehe
   [QS-02](../quality/szenarien.md#qs-02--latenzmeldung).
 - **AK3 – Blockgrößen:** Gegeben dasselbe Signal, dieselbe Samplerate und
   derselbe Anfangszustand, wenn mit den abgestimmten Blockgrößen verarbeitet
@@ -76,17 +101,17 @@ separat beauftragter Prototyp darf zuvor Messwerte zur Festlegung liefern.
 - **AK4 – Signalgrenzen:** Gegeben Stille, ein Impuls und ein Signal nahe
   Vollaussteuerung unter den abgestimmten Bedingungen, wenn diese neutral
   verarbeitet werden, dann sind alle Ausgangssamples endlich; Stille erzeugt
-  kein Signal oberhalb der abgestimmten Stille-Grenze. **Pegel des
-  Vollaussteuerungstests und Stille-Grenze offen.**
+  kein Signal oberhalb der abgestimmten Stille-Grenze.
+  **Versuchspegel:** −0,1 dBFS; **Stille-Grenze offen.**
 - **AK5 – Host-Nachweis:** Gegeben ein lokaler VST3-fähiger Test-Host und ein
   Build für die festgelegte Plattform, wenn das Plugin geladen und ein
   Testsignal im neutralen Zustand verarbeitet wird, dann werden Audio und
-  gemeldete Latenz für die Prüfung zugänglich. **Host, Plattform und konkrete
-  Prüfmethode offen.**
+  gemeldete Latenz für die Prüfung zugänglich. **Vorgesehen:** der
+  JUCE-VST3-Testhost im Repository auf Windows x86-64; tatsächlicher
+  Windows-/Ableton-Nachweis noch offen. Der Linux-Test ist kein Ersatz.
 
 Blockgröße 0, Samplerate-Wechsel sowie ein Stereo-Test mit getrennt angeregten
-Kanälen sind zusätzlich zu betrachten. Ihre genauen Bedingungen und
-Erwartungen sind vor der Freigabe zu vereinbaren. Ein Zustand-laden-Test für
+Kanälen gehören zum freigegebenen Versuch; Verhalten siehe oben. Ein Zustand-laden-Test für
 Kurven und Parameter gehört nicht zu diesem Zwischenstand.
 
 ## Qualität
@@ -103,13 +128,8 @@ nicht erbracht.
 - **Belegt:** Die Vision verlangt neutrale Verarbeitung, spektrale
   Verarbeitung, Messung und Host-Latenzmeldung; konkrete Toleranzen sollen
   anhand eines Prototyps festgelegt werden.
-- **Annahme:** Ein früher Testzustand kann ohne fertigen Kurveneditor
-  bereitgestellt werden. Ob er intern oder für Nutzende sichtbar ist, ist
-  nicht entschieden.
-- **Offen – Produktverantwortung:** Wie wird Neutralität aktiviert und wie
-  unterscheidet sie sich technisch vom späteren Bypass? Der spätere
-  Ausgangsschutz darf ein lautes neutrales Signal verändern; der hier
-  untersuchte Signalweg enthält ihn noch nicht.
+- **Freigegeben:** Immer aktiver neutraler STFT-Pfad ohne Kurveneditor;
+  kein direkter Bypass und kein Ausgangsschutz in diesem Zwischenstand.
 - **Offen – Produktverantwortung mit Test/Entwicklung:** Welche Testmatrix,
   Signalparameter, Auswertungsfenster und Akzeptanzgrenzen werden nach dem
   Prototyp verbindlich? Welche Mono-/Stereo-Layouts gehören dazu?
@@ -117,11 +137,10 @@ nicht erbracht.
   Untersuchungspfad, Windows x86-64 und AGPLv3 als Lizenzrichtung; siehe
   [Architektur](../adr/0001-prototyp-architektur.md) und
   [Lizenzmodell](../adr/0002-lizenzmodell.md).
-- **Offen – Entwicklung mit Produktverantwortung:** Welcher Test-Host und
-  welche konkreten Abhängigkeiten, Versionen und Lizenzdetails eignen sich
-  für den ersten VST3-Nachweis?
-- **Offen – Test/Entwicklung:** Wie werden Nulltest, Frequenzabweichung,
-  Impulslatenz, Stille und Blockgrößenvergleich genau ausgewertet?
+- **Festgelegt für den Versuch:** Gepinnte Abhängigkeiten und kleiner
+  JUCE-VST3-Testhost im Repository. Windows/Ableton-Nachweis ausstehend.
+- **Offen – Test/Entwicklung mit Produktverantwortung:** Verbindliche
+  numerische Abnahmegrenzen nach den ersten tatsächlichen Messungen.
 
 ## Verifikation und Freigabe
 
@@ -129,10 +148,14 @@ nicht erbracht.
   beschlossene Grenzwerte nur berichten, nicht als bestanden ausgeben.
 - **Geplant:** VST3-Host-Test für AK2 und AK5; Hörvergleich als ergänzende,
   dokumentierte Prüfung, nicht als Ersatz für den Nulltest.
-- **Noch nicht ausführbar:** Es gibt derzeit weder Plugin-Code noch
-  Build-System, Tests oder einen ausgewählten VST3-Test-Host. Kein Audio-, Host- oder
-  Echtzeitverhalten wurde durch diesen Entwurf nachgewiesen.
-- **Freigaben:** Die dokumentierte Architektur- und Lizenzrichtung ist
-  freigegeben. Implementierung, konkrete Abhängigkeiten und deren Versionen
-  sowie externe Aktionen bedürfen eines gesonderten Auftrags beziehungsweise
-  der erforderlichen Zustimmung.
+- **Ausgeführt:** Linux-x86-64-Build sowie Offline-, Processor- und echter
+  VST3-Modultest erfolgreich. Gemeldete und am Impuls gemessene Latenz
+  2048 Samples. Numerische Ergebnisse bleiben reine Messwerte, keine
+  Abnahme offener Toleranzen; siehe
+  [Prüfprotokoll](../verification/neutral-prototype.md).
+  Windows-/Ableton-Nachweis weiterhin nicht durchgeführt.
+- **Echtzeitrestrisiko belegt:** JUCEs VST3-Wrapper nimmt vor dem eigenen
+  Callback einen Lock. Kein vollständig lockfreier VST3-Pfad wird behauptet.
+- **Freigaben:** Umsetzung und genannte Abhängigkeiten sind beauftragt.
+  Neue direkte Abhängigkeiten, Veröffentlichung und externe Aktionen sind
+  dadurch nicht pauschal freigegeben.
