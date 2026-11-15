@@ -8,6 +8,13 @@ int main()
     {
         juce::ScopedJuceInitialiser_GUI initialiseJuce;
         spectral_decay::NeutralAudioProcessor processor;
+        if (!processor.hasEditor())
+            throw std::runtime_error("The prototype must expose an editor");
+        {
+            std::unique_ptr<juce::AudioProcessorEditor> editor(processor.createEditor());
+            if (editor == nullptr)
+                throw std::runtime_error("The prototype editor could not be created");
+        }
         checkProcessor(processor);
         auto unsupported = processor.getBusesLayout();
         unsupported.inputBuses.set(0, juce::AudioChannelSet::mono());

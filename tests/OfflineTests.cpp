@@ -25,6 +25,7 @@
 namespace
 {
 using spectral_decay::NeutralStft;
+using TailMode = spectral_decay::NeutralStft::TailMode;
 
 constexpr std::array<double, 2> sampleRates { 44100.0, 48000.0 };
 constexpr std::array<std::size_t, 4> blockSizes { 1, 64, 512, 257 };
@@ -1253,6 +1254,595 @@ void checkStateSemantics(double sampleRate,
     }
 }
 
+const char* tailModeName(TailMode mode)
+{
+    return mode == TailMode::tonal ? "tonal" : "noise";
+}
+
+std::vector<float> makeBandLimitedNoiseLikeBurst(double sampleRate,
+                                                 std::size_t frames)
+{
+    // A deterministic random-phase multisine is bounded to the proposed
+    // 500--1500 Hz band without relying on a platform-dependent noise filter.
+    constexpr std::size_t partialCount = 49;
+    constexpr double firstFrequency = 520.0;
+    constexpr double frequencySpacing = 19.5;
+    constexpr double targetPeak = 0.2;
+    constexpr double uint32Max = 4294967295.0;
+    const double twoPi = 2.0 * std::acos(-1.0);
+    std::array<double, partialCount> phases {};
+    std::uint32_t state = 0x7F4A7C15u;
+    for (auto& phase : phases)
+    {
+        state ^= state << 13;
+        state ^= state >> 17;
+        state ^= state << 5;
+        phase = twoPi * static_cast<double>(state) / uint32Max;
+    }
+
+    std::vector<float> result(frames, 0.0f);
+    double peak = 0.0;
+    for (std::size_t frame = 0; frame < frames; ++frame)
+    {
+        const double time = static_cast<double>(frame) / sampleRate;
+        double value = 0.0;
+        for (std::size_t partial = 0; partial < partialCount; ++partial)
+        {
+            const double frequency = firstFrequency
+                                   + frequencySpacing * static_cast<double>(partial);
+            value += std::sin(twoPi * frequency * time + phases[partial]);
+        }
+        result[frame] = static_cast<float>(value);
+        peak = std::max(peak, std::abs(value));
+    }
+    if (peak > 0.0)
+    {
+        const double scale = targetPeak / peak;
+        for (auto& sample : result)
+            sample = static_cast<float>(static_cast<double>(sample) * scale);
+    }
+    return result;
+}
+
+TestSignal makeTailProbe(double sampleRate,
+                         const std::string& kind,
+                         std::size_t channelCount,
+                         double burstSeconds = 0.5)
+{
+    constexpr double silenceSeconds = 2.4;
+    constexpr double toneFrequency = 1000.0;
+    constexpr double toneAmplitude = 0.2;
+    const auto burstFrames = framesFor(burstSeconds, sampleRate);
+    const auto silenceFrames = framesFor(silenceSeconds, sampleRate);
+    TestSignal signal = makeBlankSignal("tail_" + kind + "_burst_then_2p4s_silence",
+                                       channelCount, burstFrames + silenceFrames);
+    std::vector<float> mono(burstFrames, 0.0f);
+    if (kind == "tonal")
+    {
+        const double twoPi = 2.0 * std::acos(-1.0);
+        for (std::size_t frame = 0; frame < burstFrames; ++frame)
+        {
+            const double time = static_cast<double>(frame) / sampleRate;
+            mono[frame] = static_cast<float>(
+                toneAmplitude * std::sin(twoPi * toneFrequency * time));
+        }
+    }
+    else
+    {
+        mono = makeBandLimitedNoiseLikeBurst(sampleRate, burstFrames);
+    }
+    for (auto& channel : signal.input)
+        std::copy(mono.begin(), mono.end(), channel.begin());
+    return signal;
+}
+
+struct TailWindowMetrics
+{
+    double rms {};
+    double peak {};
+    bool finite { true };
+};
+
+TailWindowMetrics tailWindowMetrics(const RunResult& result,
+                                    std::size_t channel,
+                                    std::size_t inputTimelineBegin,
+                                    std::size_t inputTimelineEnd)
+{
+    TailWindowMetrics metrics;
+    const auto begin = std::min(result.outputFrames,
+        inputTimelineBegin + static_cast<std::size_t>(result.latency));
+    const auto end = std::min(result.outputFrames,
+        inputTimelineEnd + static_cast<std::size_t>(result.latency));
+    long double energy = 0.0L;
+    std::size_t count = 0;
+    for (std::size_t frame = begin; frame < end; ++frame)
+    {
+        const double sample = result.output[channel][frame];
+        metrics.finite = metrics.finite && std::isfinite(sample);
+        metrics.peak = std::max(metrics.peak, std::abs(sample));
+        energy += static_cast<long double>(sample) * sample;
+        ++count;
+    }
+    if (count > 0)
+        metrics.rms = std::sqrt(static_cast<double>(energy / count));
+    return metrics;
+}
+
+bool allZeroFromInputTimeline(const RunResult& result,
+                              std::size_t channel,
+                              std::size_t inputTimelineStart)
+{
+    const auto begin = std::min(result.outputFrames,
+        inputTimelineStart + static_cast<std::size_t>(result.latency));
+    return std::all_of(result.output[channel].begin()
+                           + static_cast<std::ptrdiff_t>(begin),
+                       result.output[channel].end(),
+                       [](float sample) { return sample == 0.0f; });
+}
+
+void recordTailMeasurement(Summary& summary,
+                           CsvReport& report,
+                           double sampleRate,
+                           std::size_t blockSize,
+                           const std::string& signal,
+                           const std::string& channel,
+                           const RunResult& result,
+                           const std::string& metric,
+                           double value,
+                           double peak = 0.0,
+                           const std::string& window = "tail_window")
+{
+    ++summary.measurements;
+    report.row(toString(sampleRate), toString(blockSize),
+               layoutName(result.output.size()), signal, channel, window,
+               toString(result.inputFrames), toString(result.outputFrames),
+               toString(result.latency), metric, {}, value, peak, {}, {}, {}, {},
+               "latency_aligned_input_timeline", {}, {}, {}, "MEASUREMENT_ONLY",
+               {}, {}, "input_sample_index");
+}
+
+void recordTailFrequencyMeasurement(Summary& summary,
+                                    CsvReport& report,
+                                    double sampleRate,
+                                    std::size_t blockSize,
+                                    const std::string& signal,
+                                    const RunResult& result,
+                                    const FrequencyEstimate& estimate,
+                                    std::size_t timelineBegin,
+                                    std::size_t timelineEnd)
+{
+    ++summary.measurements;
+    report.row(toString(sampleRate), toString(blockSize),
+               layoutName(result.output.size()), signal, "M",
+               "0p1_to_0p4s_after_burst",
+               toString(result.inputFrames), toString(result.outputFrames),
+               toString(result.latency), "tail_frequency_estimate_hz",
+               {}, {}, {}, {}, 1000.0, estimate.frequencyHz,
+               "latency_aligned_input_timeline", estimate.ambiguity,
+               {}, {}, {}, "MEASUREMENT_ONLY",
+               toString(timelineBegin), toString(timelineEnd),
+               "positive_zero_crossing_regression_on_tail_output");
+}
+
+RunResult processTailWithSwitchOff(NeutralStft& processor,
+                                  const TestSignal& signal,
+                                  std::size_t blockSize,
+                                  std::size_t switchPosition,
+                                  TailMode mode)
+{
+    RunResult result;
+    result.inputFrames = signal.input.empty() ? 0 : signal.input.front().size();
+    result.latency = processor.latencySamples();
+    result.outputFrames = result.inputFrames
+                        + static_cast<std::size_t>(result.latency)
+                        + 4 * NeutralStft::fftSize;
+    result.output = signal.input;
+    for (auto& channel : result.output)
+        channel.resize(result.outputFrames, 0.0f);
+
+    processor.setTail(1.0f, mode);
+    std::array<float*, 2> channelPointers {};
+    std::size_t offset = 0;
+    bool switchedOff = false;
+    while (offset < result.outputFrames)
+    {
+        if (!switchedOff && offset >= switchPosition)
+        {
+            processor.setTail(0.0f, mode);
+            switchedOff = true;
+        }
+        auto count = std::min(blockSize, result.outputFrames - offset);
+        if (!switchedOff)
+            count = std::min(count, switchPosition - offset);
+        for (std::size_t channel = 0; channel < result.output.size(); ++channel)
+            channelPointers[channel] = result.output[channel].data() + offset;
+        processor.process(channelPointers.data(), count);
+        offset += count;
+    }
+    return result;
+}
+
+void checkTailExperiment(double sampleRate,
+                        std::size_t blockSize,
+                        CsvReport& report,
+                        Summary& summary,
+                        std::map<std::string, RunResult>& blockOneReference)
+{
+    const auto burstFrames = framesFor(0.5, sampleRate);
+    const auto energyBegin = burstFrames + framesFor(0.1, sampleRate);
+    const auto energyEnd = burstFrames + framesFor(1.5, sampleRate);
+    const auto twoSecondEnd = burstFrames + framesFor(2.0, sampleRate);
+    const auto postEndCheck = twoSecondEnd;
+
+    for (const std::string kind : { "tonal", "noise_like" })
+    {
+        const auto signal = makeTailProbe(sampleRate, kind, 1);
+        NeutralStft neutral;
+        neutral.prepare(sampleRate, 1);
+        neutral.reset();
+        const auto neutralResult = processSignal(neutral, signal, blockSize);
+
+        for (const auto mode : { TailMode::tonal, TailMode::noise })
+        {
+            const std::string name = std::string("tail_") + tailModeName(mode) + "_" + kind;
+            NeutralStft active;
+            active.prepare(sampleRate, 1);
+            active.setTail(1.0f, mode);
+            active.reset();
+            const auto result = processSignal(active, signal, blockSize);
+
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", name, "M",
+                             "reported_latency",
+                             result, "tail_mode_does_not_change_reported_latency",
+                             result.latency == neutralResult.latency,
+                             {}, {}, "compared with unset/default tail path",
+                             {}, {}, "reported_latency_samples");
+
+            const auto impulsePosition = framesFor(0.25, sampleRate);
+            auto impulse = makeBlankSignal("tail_latency_impulse", 1,
+                                            framesFor(2.5, sampleRate));
+            impulse.input[0][impulsePosition] = 0.25f;
+            NeutralStft impulseProcessor;
+            impulseProcessor.prepare(sampleRate, 1);
+            impulseProcessor.setTail(1.0f, mode);
+            const auto impulseResult = processSignal(
+                impulseProcessor, impulse, blockSize);
+            const auto impulsePeak = maximumPosition(impulseResult.output[0]);
+            const auto measuredLatency = static_cast<long long>(impulsePeak.first)
+                                       - static_cast<long long>(impulsePosition);
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", name + "_impulse",
+                             "M", "full", impulseResult,
+                             "tail_mode_impulse_peak_matches_reported_latency",
+                             impulsePeak.second
+                                 && measuredLatency == impulseResult.latency,
+                             {}, {},
+                             impulsePeak.second ? "unique absolute peak"
+                                                : "absolute peak is not unique",
+                             "0", toString(impulseResult.outputFrames),
+                             "output_sample_index");
+
+            const auto activeWindow = tailWindowMetrics(
+                result, 0, energyBegin, energyEnd);
+            const auto neutralWindow = tailWindowMetrics(
+                neutralResult, 0, energyBegin, energyEnd);
+            recordTailMeasurement(summary, report, sampleRate, blockSize, name,
+                                  "M", result, "tail_window_rms",
+                                  activeWindow.rms, activeWindow.peak);
+            recordTailMeasurement(summary, report, sampleRate, blockSize,
+                                  name + "_neutral_reference", "M",
+                                  neutralResult, "tail_window_rms",
+                                  neutralWindow.rms, neutralWindow.peak);
+            struct TailMeasureWindow
+            {
+                const char* name;
+                double beginSeconds;
+                double endSeconds;
+            };
+            constexpr std::array<TailMeasureWindow, 5> tailMeasureWindows {{
+                { "0p1_to_0p2s_after_burst", 0.1, 0.2 },
+                { "0p2_to_0p4s_after_burst", 0.2, 0.4 },
+                { "0p4_to_0p8s_after_burst", 0.4, 0.8 },
+                { "0p8_to_1p5s_after_burst", 0.8, 1.5 },
+                { "1p5_to_2s_after_burst", 1.5, 2.0 }
+            }};
+            for (const auto& window : tailMeasureWindows)
+            {
+                const auto begin = burstFrames + framesFor(window.beginSeconds, sampleRate);
+                const auto end = burstFrames + framesFor(window.endSeconds, sampleRate);
+                const auto activeMeasure = tailWindowMetrics(result, 0, begin, end);
+                const auto neutralMeasure = tailWindowMetrics(
+                    neutralResult, 0, begin, end);
+                recordTailMeasurement(summary, report, sampleRate, blockSize, name,
+                                      "M", result, "tail_window_rms",
+                                      activeMeasure.rms, activeMeasure.peak,
+                                      window.name);
+                recordTailMeasurement(summary, report, sampleRate, blockSize,
+                                      name + "_neutral_reference", "M",
+                                      neutralResult, "tail_window_rms",
+                                      neutralMeasure.rms, neutralMeasure.peak,
+                                      window.name);
+            }
+            if (kind == "tonal")
+            {
+                const auto frequencyBegin = burstFrames + framesFor(0.1, sampleRate);
+                const auto frequencyEnd = burstFrames + framesFor(0.4, sampleRate);
+                const auto outputBegin = std::min(result.outputFrames,
+                    frequencyBegin + static_cast<std::size_t>(result.latency));
+                const auto outputEnd = std::min(result.outputFrames,
+                    frequencyEnd + static_cast<std::size_t>(result.latency));
+                const std::vector<float> frequencyWindow(
+                    result.output[0].begin()
+                        + static_cast<std::ptrdiff_t>(outputBegin),
+                    result.output[0].begin()
+                        + static_cast<std::ptrdiff_t>(outputEnd));
+                const auto estimate = estimateByPositiveZeroCrossings(
+                    frequencyWindow, 0, frequencyWindow.size(), sampleRate);
+                recordTailFrequencyMeasurement(
+                    summary, report, sampleRate, blockSize, name, result,
+                    estimate, frequencyBegin, frequencyEnd);
+            }
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", name, "M",
+                             "0p1_to_1p5s_after_burst",
+                             result, "tail_energy_exceeds_neutral_reference",
+                             activeWindow.rms > neutralWindow.rms,
+                             activeWindow.peak, activeWindow.rms,
+                             "RMS values are reported; no open-ended sound-quality threshold imposed",
+                             toString(energyBegin), toString(energyEnd),
+                             "latency_aligned_input_sample_index");
+
+            bool finite = allFinite(result, 0);
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", name, "M", "full",
+                             result, "tail_output_is_finite", finite,
+                             {}, {}, {}, "0", toString(result.outputFrames),
+                             "output_sample_index");
+
+            // The tail, including its WOLA overlap support, must already be
+            // zero at exactly two seconds on the latency-aligned input axis.
+            const bool ended = allZeroFromInputTimeline(result, 0, postEndCheck);
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", name, "M",
+                             "from_exact_2s_cutoff",
+                             result, "tail_is_zero_after_two_second_cutoff",
+                             ended, {}, {}, "exactly 2 s after the end of input excitation; no FFT-support grace",
+                             toString(postEndCheck), toString(result.inputFrames),
+                             "latency_aligned_input_sample_index");
+
+            const auto key = toString(sampleRate) + "_" + name;
+            if (blockSize == 1)
+            {
+                blockOneReference.emplace(key, result);
+            }
+            else
+            {
+                const auto reference = blockOneReference.find(key);
+                if (reference != blockOneReference.end())
+                {
+                    for (std::size_t channel = 0;
+                         channel < result.output.size(); ++channel)
+                    {
+                        const bool same = exactlyEqualChannel(
+                            reference->second.output[channel], result.output[channel]);
+                        const auto diff = differenceMetrics(
+                            reference->second.output, result.output, channel);
+                        recordExactCheck(summary, report, toString(sampleRate),
+                                         toString(blockSize), "mono", name, "M",
+                                         "full_vs_block_1", result,
+                                         "tail_output_block_size_invariant",
+                                         same, diff.first, diff.second,
+                                         "bitwise comparison; latency unchanged",
+                                         "0", toString(result.outputFrames),
+                                         "output_sample_index");
+                    }
+                }
+            }
+
+            active.reset();
+            const auto repeat = processSignal(active, signal, blockSize);
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", name, "M",
+                             "reset_repeat",
+                             repeat, "tail_reset_reproduces_deterministic_output",
+                             exactlyEqualChannel(result.output[0], repeat.output[0]),
+                             {}, {}, "same fixed input and TailMode after reset",
+                             "0", toString(repeat.outputFrames),
+                             "output_sample_index");
+
+            active.reset();
+            const auto silence = makeBlankSignal("tail_reset_silence", 1,
+                                                  framesFor(1.0, sampleRate));
+            const auto silentResult = processSignal(active, silence, blockSize);
+            const bool silent = std::all_of(
+                silentResult.output[0].begin(), silentResult.output[0].end(),
+                [](float sample) { return sample == 0.0f; });
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", name, "M",
+                             "silence_after_reset",
+                             silentResult, "reset_tail_does_not_emit_into_silence",
+                             silent, {}, {}, {}, "0",
+                             toString(silentResult.outputFrames),
+                             "output_sample_index");
+
+            NeutralStft zeroStrength;
+            zeroStrength.prepare(sampleRate, 1);
+            zeroStrength.setTail(0.0f, mode);
+            const auto zeroStrengthResult = processSignal(
+                zeroStrength, signal, blockSize);
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", name, "M",
+                             "amount_zero_vs_default",
+                             zeroStrengthResult,
+                             "zero_tail_strength_is_neutral_path",
+                             exactlyEqualChannel(neutralResult.output[0],
+                                                 zeroStrengthResult.output[0]),
+                             {}, {}, "bitwise comparison against unset/default tail",
+                             "0", toString(zeroStrengthResult.outputFrames),
+                             "output_sample_index");
+
+            // Switching off while the burst is still active must restore the
+            // neutral stream once all already-analysed WOLA frames have passed.
+            const auto switchAt = burstFrames / 2;
+            NeutralStft switched;
+            switched.prepare(sampleRate, 1);
+            switched.reset();
+            const auto switchedResult = processTailWithSwitchOff(
+                switched, signal, blockSize, switchAt, mode);
+            const auto neutralComparableStart = switchAt
+                + static_cast<std::size_t>(switchedResult.latency)
+                + NeutralStft::fftSize;
+            bool returnedToNeutral = true;
+            for (std::size_t frame = neutralComparableStart;
+                 frame < switchedResult.outputFrames; ++frame)
+                returnedToNeutral = returnedToNeutral
+                    && switchedResult.output[0][frame] == neutralResult.output[0][frame];
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "mono", name, "M",
+                             "after_live_switch_to_zero",
+                             switchedResult, "switching_tail_off_returns_to_neutral",
+                             returnedToNeutral, {}, {},
+                             "comparison starts after the existing N-sample WOLA support",
+                             toString(neutralComparableStart),
+                             toString(switchedResult.outputFrames),
+                             "output_sample_index");
+        }
+    }
+
+    // Identical stereo inputs must remain coherent; a single active channel
+    // must not synthesize or leak a tail into the other channel.
+    for (const auto mode : { TailMode::tonal, TailMode::noise })
+    {
+        const std::string name = std::string("tail_stereo_") + tailModeName(mode);
+        auto identical = makeTailProbe(sampleRate, "noise_like", 2);
+        NeutralStft coherent;
+        coherent.prepare(sampleRate, 2);
+        coherent.setTail(1.0f, mode);
+        const auto coherentResult = processSignal(coherent, identical, blockSize);
+        const bool sameChannels = exactlyEqualChannel(coherentResult.output[0],
+                                                       coherentResult.output[1]);
+        recordExactCheck(summary, report, toString(sampleRate),
+                         toString(blockSize), "stereo", name, "LR", "full",
+                         coherentResult, "identical_stereo_inputs_remain_coherent",
+                         sameChannels, {}, {},
+                         "bitwise equality for identical inputs",
+                         "0", toString(coherentResult.outputFrames),
+                         "output_sample_index");
+
+        auto antiPhase = makeTailProbe(sampleRate, "noise_like", 2);
+        for (auto& sample : antiPhase.input[1])
+            sample = -sample;
+        NeutralStft antiPhaseProcessor;
+        antiPhaseProcessor.prepare(sampleRate, 2);
+        antiPhaseProcessor.setTail(1.0f, mode);
+        const auto antiPhaseResult = processSignal(
+            antiPhaseProcessor, antiPhase, blockSize);
+        const bool oppositeChannels =
+            antiPhaseResult.output[0].size() == antiPhaseResult.output[1].size()
+            && std::equal(antiPhaseResult.output[0].begin(),
+                          antiPhaseResult.output[0].end(),
+                          antiPhaseResult.output[1].begin(),
+                          [](float left, float right) { return left == -right; });
+        recordExactCheck(summary, report, toString(sampleRate),
+                         toString(blockSize), "stereo", name, "LR", "full",
+                         antiPhaseResult, "opposite_stereo_inputs_remain_opposite",
+                         oppositeChannels, {}, {},
+                         "R = -L, tested sample-by-sample",
+                         "0", toString(antiPhaseResult.outputFrames),
+                         "output_sample_index");
+        for (std::size_t channel = 0; channel < 2; ++channel)
+        {
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "stereo", name,
+                             channelName(channel, 2), "full",
+                             antiPhaseResult, "anti_phase_tail_output_is_finite",
+                             allFinite(antiPhaseResult, channel),
+                             {}, {}, {}, "0",
+                             toString(antiPhaseResult.outputFrames),
+                             "output_sample_index");
+        }
+
+        for (std::size_t channel = 0; channel < 2; ++channel)
+        {
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "stereo", name,
+                             channelName(channel, 2), "full",
+                             coherentResult, "tail_stereo_output_is_finite",
+                             allFinite(coherentResult, channel),
+                             {}, {}, {}, "0",
+                             toString(coherentResult.outputFrames),
+                             "output_sample_index");
+        }
+        for (std::size_t activeChannel = 0; activeChannel < 2; ++activeChannel)
+        {
+            auto oneSided = makeTailProbe(sampleRate, "noise_like", 2);
+            std::fill(oneSided.input[1 - activeChannel].begin(),
+                      oneSided.input[1 - activeChannel].end(), 0.0f);
+            NeutralStft isolated;
+            isolated.prepare(sampleRate, 2);
+            isolated.setTail(1.0f, mode);
+            const auto isolatedResult = processSignal(isolated, oneSided, blockSize);
+            const auto inactive = 1 - activeChannel;
+            const bool noLeak = std::all_of(
+                isolatedResult.output[inactive].begin(),
+                isolatedResult.output[inactive].end(),
+                [](float sample) { return sample == 0.0f; });
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "stereo", name,
+                             activeChannel == 0 ? "L_only" : "R_only", "full",
+                             isolatedResult, "inactive_channel_has_no_tail_or_crosstalk",
+                             noLeak, {}, {},
+                             activeChannel == 0 ? "right output exactly zero"
+                                                : "left output exactly zero",
+                             "0", toString(isolatedResult.outputFrames),
+                             "output_sample_index");
+            recordExactCheck(summary, report, toString(sampleRate),
+                             toString(blockSize), "stereo", name,
+                             activeChannel == 0 ? "L_only" : "R_only", "full",
+                             isolatedResult, "one_sided_tail_output_is_finite",
+                             allFinite(isolatedResult, activeChannel),
+                             {}, {}, {}, "0",
+                             toString(isolatedResult.outputFrames),
+                             "output_sample_index");
+        }
+    }
+}
+
+void checkShortTail(double sampleRate, CsvReport& report, Summary& summary)
+{
+    constexpr std::size_t blockSize = 257;
+    constexpr double burstSeconds = 0.01;
+    const auto begin = framesFor(burstSeconds + 0.1, sampleRate);
+    const auto end = framesFor(burstSeconds + 0.2, sampleRate);
+    for (const auto& test : {std::pair<const char*, TailMode>{"tonal", TailMode::tonal},
+                             {"noise_like", TailMode::noise}})
+    {
+        const auto signal = makeTailProbe(sampleRate, test.first, 1, burstSeconds);
+        NeutralStft neutral;
+        neutral.prepare(sampleRate, 1);
+        const auto reference = processSignal(neutral, signal, blockSize);
+        NeutralStft active;
+        active.prepare(sampleRate, 1);
+        active.setTail(1.0f, test.second);
+        const auto result = processSignal(active, signal, blockSize);
+        const auto measured = tailWindowMetrics(result, 0, begin, end);
+        const auto neutralMeasured = tailWindowMetrics(reference, 0, begin, end);
+        const std::string name = std::string("short_tail_") + test.first;
+        recordTailMeasurement(summary, report, sampleRate, blockSize, name, "M",
+                              result, "tail_window_rms", measured.rms, measured.peak,
+                              "0p1_to_0p2s_after_burst");
+        recordExactCheck(summary, report, toString(sampleRate), toString(blockSize),
+                         "mono", name, "M", "0p1_to_0p2s_after_burst", result,
+                         "short_burst_tail_exceeds_neutral",
+                         measured.finite && measured.rms > neutralMeasured.rms,
+                         measured.peak, measured.rms,
+                         "10 ms burst; neutral reference; sound-quality threshold open",
+                         toString(begin), toString(end),
+                         "latency_aligned_input_sample_index");
+    }
+}
+
 std::optional<std::string> reportPath(int argc, char** argv)
 {
     std::string path = "offline-metrics.csv";
@@ -1293,9 +1883,11 @@ int main(int argc, char** argv)
     {
         for (const double sampleRate : sampleRates)
         {
+            checkShortTail(sampleRate, report, summary);
             for (const std::size_t channelCount : { std::size_t(1), std::size_t(2) })
             {
                 std::map<std::string, RunResult> blockOneReference;
+                std::map<std::string, RunResult> tailBlockOneReference;
                 for (const std::size_t blockSize : blockSizes)
                 {
                     auto signals = makeSignals(sampleRate, channelCount, blockSize);
@@ -1324,6 +1916,10 @@ int main(int argc, char** argv)
 
                     checkStateSemantics(sampleRate, channelCount, blockSize,
                                         report, summary);
+
+                    if (channelCount == 1)
+                        checkTailExperiment(sampleRate, blockSize, report, summary,
+                                            tailBlockOneReference);
                 }
             }
         }

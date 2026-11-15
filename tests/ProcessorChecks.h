@@ -8,11 +8,106 @@
 #include <stdexcept>
 #include <vector>
 
+inline juce::AudioProcessorParameter& findParameter(juce::AudioProcessor& processor,
+                                                    const juce::String& name)
+{
+    for (auto* parameter : processor.getParameters())
+        if (parameter->getName(64) == name)
+            return *parameter;
+    throw std::runtime_error("Missing parameter: " + name.toStdString());
+}
+
+inline void checkTailControls(juce::AudioProcessor& processor)
+{
+    auto& amount = findParameter(processor, "Tail amount");
+    auto& mode = findParameter(processor, "Tail mode");
+    if (std::abs(amount.getValue()) > 1.0e-6f)
+        throw std::runtime_error("The tail must default to neutral");
+
+    amount.setValueNotifyingHost(0.75f);
+    mode.setValueNotifyingHost(1.0f);
+    juce::MemoryBlock state;
+    processor.getStateInformation(state);
+    if (state.getSize() == 0)
+        throw std::runtime_error("Parameter state is empty");
+    amount.setValueNotifyingHost(0.0f);
+    mode.setValueNotifyingHost(0.0f);
+    processor.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+    if (std::abs(amount.getValue() - 0.75f) > 0.001f || mode.getValue() < 0.99f)
+        throw std::runtime_error("Parameter state was not restored");
+
+    auto layout = processor.getBusesLayout();
+    layout.inputBuses.set(0, juce::AudioChannelSet::mono());
+    layout.outputBuses.set(0, juce::AudioChannelSet::mono());
+    if (!processor.setBusesLayout(layout))
+        throw std::runtime_error("Mono layout rejected");
+    constexpr double rate = 48000.0;
+    constexpr int blockSize = 257;
+    constexpr int signalLength = 14400;
+    processor.setRateAndBufferSizeDetails(rate, blockSize);
+    processor.prepareToPlay(rate, blockSize);
+    const int latency = processor.getLatencySamples();
+    const int length = signalLength + latency + 48000;
+
+    auto render = [&](float tailAmount, float tailMode, bool enableDuringSignal = false)
+    {
+        amount.setValueNotifyingHost(enableDuringSignal ? 0.0f : tailAmount);
+        mode.setValueNotifyingHost(tailMode);
+        processor.reset();
+        juce::AudioBuffer<float> buffer(1, blockSize);
+        juce::MidiBuffer midi;
+        double energy = 0.0;
+        bool enabled = !enableDuringSignal;
+        for (int position = 0; position < length;)
+        {
+            if (!enabled && position >= signalLength / 2)
+            {
+                amount.setValueNotifyingHost(tailAmount);
+                enabled = true;
+            }
+            const int count = std::min(blockSize, length - position);
+            buffer.setSize(1, count, false, false, true);
+            for (int n = 0; n < count; ++n)
+            {
+                const int time = position + n;
+                const float sample = time < signalLength
+                    ? static_cast<float>(0.2 * std::sin(2.0 * juce::MathConstants<double>::pi
+                                                        * 1000.0 * time / rate))
+                    : 0.0f;
+                buffer.setSample(0, n, sample);
+            }
+            processor.processBlock(buffer, midi);
+            for (int n = 0; n < count; ++n)
+            {
+                const float sample = buffer.getSample(0, n);
+                if (!std::isfinite(sample))
+                    throw std::runtime_error("Non-finite tail output");
+                if (position + n >= signalLength + latency + 4800)
+                    energy += static_cast<double>(sample) * sample;
+            }
+            position += count;
+        }
+        return energy;
+    };
+
+    const double neutral = render(0.0f, 0.0f);
+    for (const float selectedMode : {0.0f, 1.0f})
+    {
+        const double tail = render(1.0f, selectedMode);
+        if (tail <= neutral + 1.0e-8)
+            throw std::runtime_error("Tail parameter did not extend the test signal");
+        std::cout << "tail_mode=" << selectedMode << ", neutral_energy=" << neutral
+                  << ", tail_energy=" << tail << '\n';
+    }
+    if (render(1.0f, 0.0f, true) <= neutral + 1.0e-8)
+        throw std::runtime_error("Changing the tail during playback had no effect");
+    amount.setValueNotifyingHost(0.0f);
+    mode.setValueNotifyingHost(0.0f);
+    processor.releaseResources();
+}
+
 inline void checkProcessor(juce::AudioProcessor& processor)
 {
-    if (processor.hasEditor())
-        throw std::runtime_error("The neutral prototype must not expose an editor");
-
     for (const double rate : {44100.0, 48000.0})
         for (const int blockSize : {1, 64, 512, 257})
             for (const int channels : {1, 2})
@@ -95,4 +190,5 @@ inline void checkProcessor(juce::AudioProcessor& processor)
                 }
                 processor.releaseResources();
             }
+    checkTailControls(processor);
 }

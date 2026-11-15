@@ -1,16 +1,49 @@
-# Spectral Decay: neutraler Prototyp
+# Spectral Decay: experimenteller Prototyp
 
-Experimenteller JUCE/C++-VST3-Quellstand fuer Windows x86-64. Der feste
-STFT-Pfad ist noch **kein Decay-Effekt**: keine GUI, Parameter, Dry/Wet,
-eigene Bypass-Funktion oder Ausgangsschutz. Nicht auf wichtigen Projekten
-einsetzen; vor Hoertests den Abhoerpegel reduzieren.
+Experimenteller JUCE/C++-VST3-Quellstand fuer Windows x86-64. Der bisher
+neutrale STFT-Pfad wird um einen begrenzten Verlaengerungsversuch erweitert.
+Das ist **noch nicht der vollstaendige Decay-Effekt**: Es gibt weder
+Kurveneditor noch Verkuerzung, Dry/Wet, eigene Bypass-Funktion oder
+True-Peak-Ausgangsschutz. Nicht auf wichtigen Projekten einsetzen; vor
+Hoertests den Abhoerpegel reduzieren.
+
+## Hoerversuch
+
+Nach einem neuen Build das Plugin `Spectral Decay Neutral` in der DAW erneut
+laden und das Plugin-Fenster oeffnen. Der Standardeditor bietet:
+
+- **Tail amount:** Staerke des experimentellen Nachklangs zwischen 500 und
+  1500 Hz; 0 ist neutral. Fuer den ersten Versuch den Regler auf 1 stellen.
+- **Tail mode:** `Tonal` fuer einen tonalen Klang oder `Noise` fuer einen
+  rauschhaften Klang. Vor dem Abspielen einstellen: Ein bereits abgeklungener
+  Klang wird nicht nachtraeglich verlaengert.
+
+Einen kurzen Klang mit Anteilen zwischen 500 und 1500 Hz abspielen und
+anschliessend Stille lassen. Der Versuch ergaenzt erst nach erkannter Stille
+einen abklingenden Nachklang in diesem festen Frequenzbereich. Als
+experimentelle Stilleerkennung gelten 10 ms unter -60 dBFS Sample-Peak;
+der Nachklang endet spaetestens zwei Sekunden nach der letzten erkannten
+Anregung (bezogen auf die latenzkompensierte Zeitachse). Er formt
+keine frei einstellbare Frequenzkurve und unterscheidet tonale und
+rauschhafte Anteile nicht automatisch. Bei bereits sehr leise ausgeklungenen
+Signalen kann auch der hinzugefuegte Nachklang sehr leise sein.
+Die Einstellungen werden im Plugin-Zustand gespeichert. Eine einfache
+Sample-Peak-Begrenzung ist nur bei
+hinzugefuegtem Tail aktiv und kein True-Peak-Schutz; laute Eingangssignale
+werden nicht grundsaetzlich begrenzt. Klangqualitaet, Ausgangspegel und
+DAW-Kompatibilitaet sind nicht abgenommen.
+
+Grundlage ist der [vorgeschlagene Verlaengerungsversuch](docs/adr/0004-erster-verlaengerungsprototyp.md).
+Anders als in dessen urspruenglichem Offline-Zuschnitt ist diese Erweiterung
+bereits im Plugin bedienbar; die Stilleerkennung ist eine Versuchsannahme.
 
 ## Aufbau
 
 - Plattformunabhaengiger DSP-Kern: FFT 2048, Hop 512, sqrt(periodische Hann),
-  normiertes WOLA, immer FFT und inverse FFT, Mono/Stereo kanalunabhaengig.
-- JUCE-Huelle: Mono-/Stereo-Busse und Sample-Latenzmeldung; keine editierbaren
-  Einstellungen, daher noch keine Zustandspersistenz.
+  normiertes WOLA, immer FFT und inverse FFT; gemeinsamer Stereo-Ausloeser
+  und Synthese pro Kanal.
+- JUCE-Huelle: Mono-/Stereo-Busse, Sample-Latenzmeldung, generischer Editor
+  und zwei gespeicherte Versuchsparameter.
 - Deterministische Offline-Messungen, direkte Processor-Tests und ein kleiner
   Host, der das tatsaechliche VST3-Modul laedt.
 
@@ -85,20 +118,34 @@ cmake --build build --parallel 2
 ctest --test-dir build --output-on-failure
 ```
 
-Unter Ubuntu benoetigen die internen JUCE-GUI-Module trotz fehlendem Editor
+Unter Ubuntu benoetigen die JUCE-GUI-Module
 die Entwicklungsheader von X11/Xext/Xrandr/Xinerama/Xcursor/Xi,
 FreeType und Fontconfig. Im Versuch fehlten `libxrandr-dev`,
 `libxinerama-dev`, `libxcursor-dev` und `libxi-dev`; nach deren Installation
 war der vollstaendige Build erfolgreich.
 
-**Nachweisstand:** Linux-x86-64-Build und **3/3 CTest-Programme erfolgreich**.
-Die Offline-Matrix liefert 1438 bestandene harte Strukturchecks und
+**Nachweisstand des vorherigen neutralen Builds:** Linux-x86-64-Build und
+**3/3 CTest-Programme erfolgreich**. Die Offline-Matrix lieferte 1438
+bestandene harte Strukturchecks und
 3776 reine Messzeilen. Gemeldete und gemessene Latenz: **2048 Samples**;
 groesster Nullrest-Peak **-127,59 dBFS**, groesster Nullrest-RMS
 **-141,74 dBFS**; Blockgroessendifferenz im Versuch **0**.
 Diese Messwerte sind keine Abnahme offener Klangtoleranzen.
-Ein Windows- oder Ableton-Test wurde nicht durchgefuehrt. Einzelheiten:
-[Pruefprotokoll](docs/verification/neutral-prototype.md).
+Einzelheiten zum neutralen Build: [Pruefprotokoll](docs/verification/neutral-prototype.md).
+
+**Erweiterung:** Linux-Build und 3/3 CTest-Programme erfolgreich;
+1914 Strukturchecks und 4180 Messzeilen im Offline-Lauf. Tonale und
+rauschhafte Testbursts erzeugten einen Tail, auch bei 10 ms Burstlaenge.
+Die offenen Klangtoleranzen sind damit nicht abgenommen. Der Nutzer
+berichtet, dass der neutrale Prototyp unter Windows gebaut wurde und das
+Plugin laedt; ein dokumentierter Windows-/Ableton-Test der Erweiterung
+steht noch aus.
+
+Eine stichprobenartige lokale Stereo-Callback-Messung mit aktivem Tail
+ueberschritt bei 44,1 kHz und 64 Samples einmal das Blockzeitbudget: 4,13 ms
+gegenueber 1,45 ms. Die Messung lief in einer geteilten Umgebung und trennt
+DSP-Kosten nicht von Betriebssystemunterbrechungen; Aussetzer koennen daher
+nicht ausgeschlossen werden. Ein Echtzeit- oder CPU-Grenznachweis fehlt.
 
 ## Lizenz und Grenzen
 

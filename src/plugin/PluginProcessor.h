@@ -22,17 +22,22 @@ public:
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
     double getTailLengthSeconds() const override;
-    bool hasEditor() const override { return false; }
-    juce::AudioProcessorEditor* createEditor() override { return nullptr; }
+    bool hasEditor() const override { return true; }
+    juce::AudioProcessorEditor* createEditor() override;
     int getNumPrograms() override { return 1; }
     int getCurrentProgram() override { return 0; }
     void setCurrentProgram(int) override {}
     const juce::String getProgramName(int) override { return "Neutral"; }
     void changeProgramName(int, const juce::String&) override {}
     void getStateInformation(juce::MemoryBlock& destination) override;
-    void setStateInformation(const void*, int) override {}
+    void setStateInformation(const void*, int) override;
 
 private:
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+
+    juce::AudioProcessorValueTreeState parameters;
+    std::atomic<float>* tailAmount;
+    std::atomic<float>* tailMode;
     NeutralStft engine;
     double preparedSampleRate = 0.0;
     int preparedChannels = 0;

@@ -6,8 +6,29 @@ namespace spectral_decay
 NeutralAudioProcessor::NeutralAudioProcessor()
     : AudioProcessor(BusesProperties()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
-                         .withOutput("Output", juce::AudioChannelSet::stereo(), true))
+                         .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
+      parameters(*this, nullptr, "SpectralDecayState", createParameterLayout()),
+      tailAmount(parameters.getRawParameterValue("tailAmount")),
+      tailMode(parameters.getRawParameterValue("tailMode"))
 {
+    jassert(tailAmount != nullptr && tailMode != nullptr);
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout NeutralAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{"tailAmount", 1}, "Tail amount",
+        juce::NormalisableRange<float>{0.0f, 1.0f}, 0.0f));
+    layout.add(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID{"tailMode", 1}, "Tail mode",
+        juce::StringArray{"Tonal", "Noise"}, 0));
+    return layout;
+}
+
+juce::AudioProcessorEditor* NeutralAudioProcessor::createEditor()
+{
+    return new juce::GenericAudioProcessorEditor(*this);
 }
 
 void NeutralAudioProcessor::prepareToPlay(double sampleRate, int)
@@ -45,21 +66,51 @@ void NeutralAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
     jassert(buffer.getNumChannels() == preparedChannels);
     midi.clear();
+    engine.setTail(tailAmount->load(std::memory_order_relaxed),
+                   tailMode->load(std::memory_order_relaxed) < 0.5f
+                       ? NeutralStft::TailMode::tonal
+                       : NeutralStft::TailMode::noise);
     engine.process(buffer.getArrayOfWritePointers(),
                    static_cast<std::size_t>(buffer.getNumSamples()));
 }
 
 double NeutralAudioProcessor::getTailLengthSeconds() const
 {
-    // Include a reconstruction window for possible floating-point residuals.
-    return preparedSampleRate > 0.0
-               ? (engine.latencySamples() + NeutralStft::fftSize) / preparedSampleRate
-               : 0.0;
+    // Include the experimental tail and the reconstruction window.
+    const auto rate = preparedSampleRate > 0.0 ? preparedSampleRate : getSampleRate();
+    return 2.0 + (rate > 0.0
+                      ? (engine.latencySamples() + NeutralStft::fftSize) / rate
+                      : 1.0);
 }
 
 void NeutralAudioProcessor::getStateInformation(juce::MemoryBlock& destination)
 {
-    destination.reset();
+    if (const auto xml = parameters.copyState().createXml())
+        copyXmlToBinary(*xml, destination);
+    else
+    {
+        destination.reset();
+        juce::Logger::writeToLog("Spectral Decay: could not serialize plugin state");
+    }
+}
+
+void NeutralAudioProcessor::setStateInformation(const void* data, int size)
+{
+    // Earlier neutral builds did not save state.
+    if (size == 0)
+        return;
+    if (data != nullptr && size > 0)
+    {
+        if (const auto xml = getXmlFromBinary(data, size))
+        {
+            if (xml->hasTagName(parameters.state.getType()))
+            {
+                parameters.replaceState(juce::ValueTree::fromXml(*xml));
+                return;
+            }
+        }
+    }
+    juce::Logger::writeToLog("Spectral Decay: invalid plugin state");
 }
 }
 

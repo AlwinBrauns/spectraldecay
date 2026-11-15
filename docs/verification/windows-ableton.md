@@ -1,8 +1,9 @@
 # Windows-x86-64- und Ableton-Live-12-Test
 
-**Status: nicht durchgefuehrt.** Die Produktverantwortung fuehrt den Test
-spaeter auf ihrem Windows-Rechner aus. Genaue Windows-/Live-Versionen
-werden erst dann eingetragen. Linux-Syntaxpruefungen sind kein Ersatz.
+**Status:** Der Nutzer berichtet, dass der neutrale Prototyp unter Windows
+gebaut wurde und das Plugin laedt. Ein dokumentierter Windows-/Ableton-Test
+der Erweiterung mit Versionsangaben und Hoerpruefung steht noch aus.
+Linux-Pruefungen sind kein Ersatz.
 
 ## 1. Build und Offline-Hosttest
 
@@ -53,12 +54,13 @@ erfuellt sind, **nicht**, dass offene Neutralitaetstoleranzen abgenommen wurden.
    separat bestaetigen; dieses Projekt kopiert dorthin nichts automatisch.
 3. VST3-Scan aktivieren, scannen und `Spectral Decay Neutral` laden
    (exportierter Bundle-Dateiname: `spectral-decay.vst3`).
-   Keine eigene GUI ist vorgesehen; ein Host-Standardfenster ist keine
-   implementierte Plugin-GUI.
+   Der JUCE-Standardeditor bietet `Tail amount` und `Tail mode`.
+   Nach einem neuen Build das aktualisierte Bundle verwenden und in Live
+   bei Bedarf erneut scannen.
 4. Bei 44,1 und 48 kHz bekannte Impulse, Sweep und Rauschburst durchleiten.
    Input und Output als verlustfreie Dateien sichern, keine Normalisierung,
    Warp-/Stretch-Bearbeitung, Fades, Send-Effekte oder Master-Bearbeitung.
-   Testpegel zunaechst niedrig; **kein Ausgangsschutz** vorhanden.
+   Testpegel zunaechst niedrig; **kein True-Peak-Ausgangsschutz** vorhanden.
 5. Mono- und Stereo-Quellspuren sowie getrennte L-/R-Anregung verwenden.
    Tatsaechlich ausgehandeltes Plugin-Buslayout separat feststellen:
    Mono-Quellmaterial allein belegt kein Mono-Plugin-Layout.
@@ -66,9 +68,14 @@ erfuellt sind, **nicht**, dass offene Neutralitaetstoleranzen abgenommen wurden.
    kompensierter Render darf nicht nochmals um die Plugin-Latenz verschoben
    werden. Fuer den samplegenauen Roh-Latenznachweis den obigen Test-Host
    verwenden; eine gerundete Millisekundenanzeige in Live reicht nicht.
-7. Audioausgabe, Dropouts/Fehler und optionalen Hoereindruck protokollieren.
-   Kein Hoertest ersetzt den Nulltest. Kein Test von Decay, Dry/Wet, eigenem
-   Bypass oder Schutz, da nicht implementiert.
+7. Audioausgabe, Dropouts/Fehler und Hoereindruck protokollieren. Mit
+   Regler 0 neutral vergleichen; dann einen kurzen tonalen Klang bzw.
+   Rauschklang mit Anteilen von 500 bis 1500 Hz gefolgt von Stille abspielen
+   und mit erhoehtem Tail-Regler und passendem Modus testen. Kein Hoertest
+   ersetzt den Nulltest. Der Versuch bietet keine Verkuerzung, keinen
+   Kurveneditor, kein Dry/Wet, keinen eigenen Bypass und keinen
+   True-Peak-Schutz. Einen Tail-Modus vor dem Abspielen einstellen; ein
+   bereits abgeklungener Klang wird nicht nachtraeglich verlaengert.
 
 ## Ergebnisvorlage
 
