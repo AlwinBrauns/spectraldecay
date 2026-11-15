@@ -1,7 +1,11 @@
 # Neutraler Prototyp: Pruefprotokoll
 
-Stand: 2026-11-15. **Offline und Linux-VST3 validiert; Windows/Ableton offen.**
-Dies ist kein vollstaendiger Effekt und keine bestaetigte Windows-Version.
+Stand: 2026-11-15. **Historischer Nachweis des neutralen Zwischenstands:
+offline und Linux-VST3 validiert; Windows/Ableton offen.** Dieses Protokoll
+beschreibt nicht den inzwischen erweiterten Gesamtstand. Der spätere
+Verlängerungszweig ist im [separaten Tail-Prüfbericht](tail-prototype.md)
+dokumentiert. Beide Berichte lassen offene numerische Produktgrenzen
+unbewertet.
 
 ## Auftrag und Freigaben
 

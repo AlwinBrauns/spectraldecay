@@ -2,7 +2,29 @@
 
 Status: Entwurf auf Grundlage der Produktvision und des Interviews vom
 15. November 2026. Die Reihenfolge und der Zuschnitt sind Vorschläge, keine
-Umsetzungsfreigabe. Alle Einträge sind offen; es gibt noch keinen Code.
+Umsetzungsfreigabe. Der Prototyp enthält inzwischen einen neutralen
+STFT-Signalweg und einen begrenzten, experimentellen Verlängerungszweig.
+Diese Zwischenstände erfüllen die vollständigen Backlog-Ziele nicht und
+schließen daher keinen Eintrag als Produktanforderung ab.
+
+## Aktueller Umsetzungsstand
+
+| Eintrag | Belegter Stand | Noch offen |
+| --- | --- | --- |
+| PB-01 | JUCE 9.0.5 und PFFFT v1.3.0 sind im Build fixiert; Lizenztexte und Inventar liegen vor. | Rechteinhaber, abschließende Lizenz-/Distributionsprüfung und Produktarchitektur. |
+| PB-02 | Neutraler STFT-Pfad mit 2048 Samples gemeldeter und gemessener Latenz; Linux-Build und 3/3 CTest-Programme erfolgreich. | Numerische Abnahmegrenzen sowie Windows-/Ableton-Nachweis. |
+| PB-03 | Keine Verkürzung implementiert. | Algorithmus, Messkriterien und Hörnachweis. |
+| PB-04 | Experimenteller, bandbegrenzter Tail mit manuell gewähltem Tonal-/Noise-Modus; siehe [Prüfbericht](../verification/tail-prototype.md). | Kein Kurveneditor, keine automatische Tonal-/Rauschtrennung und kein gleichzeitiger Verkürzungsnachweis; Klangqualität und Windows-/Ableton-Test offen. |
+| PB-05 | Generischer JUCE-Editor mit vier Versuchsparametern. | Der vorgesehene Kurveneditor mit drei Punkten und Skala −5 bis +5 fehlt. |
+| PB-06 | Mono- und Stereo-Layouts sind implementiert und in den Linux-Tests enthalten. | Produktqualität und Stabilität des Stereobilds unter Bearbeitung sind nicht abgenommen. |
+| PB-07 | Kein eigener Bypass und keine Dry/Wet-Mischung. | Latenzkompensierte Mischung, Bypass und Übergänge. |
+| PB-08 | Der Tail-Versuch hat eine vorläufige Zwei-Sekunden-Grenze und einen einfachen Sample-Peak-Schutz nur bei zusätzlichem Tail. | Kein True-Peak-Nachweis oder vollständiger Ausgangsschutz; Stillebezug und Akzeptanzgrenzen bleiben offen. |
+| PB-09 | Linux-Build, Offline-, Processor- und geladener VST3-Modultest erfolgreich. | Windows-/Ableton- und Hörtest; kein vollständiger Echtzeitnachweis für den JUCE-VST3-Gesamtpfad. |
+
+Der frühere [neutrale Prüfbericht](../verification/neutral-prototype.md)
+dokumentiert den damaligen Stand. Die aktuelle Tail-Erweiterung ist separat
+im [Prüfbericht zum Tail-Prototyp](../verification/tail-prototype.md)
+beschrieben. Messwerte sind keine Abnahme offener Produktgrenzen.
 
 ## Ziel des ersten Entwicklungs-Builds
 
@@ -28,9 +50,10 @@ soll vorläufig höchstens −1 dBTP anstreben und darf auch bei neutraler
 Einstellung eingreifen. Bei Bypass und 100 % Dry ist er nicht aktiv. Die
 Erkennung von Stille, das Messverfahren und die Übergänge sind offen.
 
-**Ausdrücklich verschoben:** Spektralanzeige, Projektspeicherung und
-Automation dürfen zunächst fehlen. Der erste Build ist kein fertiges
-Release; wiederherstellbare Einstellungen bleiben ein späteres Produktziel.
+**Ausdrücklich verschoben:** Spektralanzeige und Automation dürfen zunächst
+fehlen. Die Projekteinstellungen sollen wiederherstellbar sein; der aktuelle
+Prototyp speichert seine vier Versuchsparameter, aber noch keine Decay-Kurve.
+Der erste Build ist kein fertiges Release.
 
 ## Vorgeschlagene Reihenfolge
 
@@ -38,10 +61,10 @@ Release; wiederherstellbare Einstellungen bleiben ein späteres Produktziel.
 
 - **Nutzen:** Entwicklung und Prüfung sind auf einer nachvollziehbaren,
   rechtlich geklärten Grundlage möglich.
-- **Ergebnis:** Vorschlag für JUCE-/C++-Build, VST3, Test-Host und
-  plattformübergreifende Struktur; Vergleich von Lizenzoptionen und
-  Architekturentscheidungen. Open Source ist angestrebt; Rechteinhaber und
-  konkrete Abhängigkeiten sind offen.
+- **Ergebnis:** Reproduzierbare JUCE-/C++-VST3-Buildgrundlage, Test-Host und
+  plattformunabhängiger DSP-Kern; Architektur- und Lizenzrichtung sind
+  dokumentiert. Open Source ist angestrebt; Rechteinhaber und
+  Distributionsprüfung bleiben offen.
 - **Prüfung:** Verantwortliche Person entscheidet über Abhängigkeiten,
   Lizenzmodell, Architektur und Prototypauftrag. Windows-/Ableton-Testweg
   dokumentieren; tatsächlichen Host-Test nicht durch einen Linux-Build
@@ -50,8 +73,9 @@ Release; wiederherstellbare Einstellungen bleiben ein späteres Produktziel.
   und [Lizenzoptionen](../adr/0002-lizenzmodell.md); STFT-Untersuchungspfad,
   AGPLv3-Lizenzrichtung und Windows x86-64 wurden am 15. November 2026
   freigegeben.
-- **Status:** Konkrete Abhängigkeiten, Rechteinhaber und Prototypauftrag
-  weiterhin offen; noch keine Implementierung freigegeben.
+- **Status:** Die Prototypgrundlage und die gepinnten Abhängigkeiten sind
+  umgesetzt. Rechteinhaber und Distributionsprüfung bleiben offen; daraus
+  folgt keine Freigabe für eine Veröffentlichung.
 
 ### PB-02 – Neutraler spektraler Durchlauf
 

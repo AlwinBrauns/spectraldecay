@@ -1,9 +1,26 @@
 # 0004 – Kleinster reversibler Verlängerungsprototyp
 
-- **Status:** vorgeschlagen
+- **Status:** Vorschlag durch abweichenden Prototyp umgesetzt, nicht als Produktentscheidung übernommen
 - **Datum:** 2026-11-15
 - **Entscheider:** Produktverantwortung; DSP-Entwicklung und Test beraten
 - **Bezug:** [Produktvision](../product/product-vision.md#technische-richtung-und-risiken), [Backlog PB-03/PB-04](../product/product-backlog.md#vorgeschlagene-reihenfolge), [ADR 0001](0001-prototyp-architektur.md), [neutraler STFT-Kern](../../src/dsp/NeutralStft.cpp)
+
+## Implementierungsstand
+
+Der aktuelle Quellstand enthält einen bedienbaren Tail-Versuch, setzt den
+nachfolgenden Vorschlag aber nicht wörtlich um. Implementiert sind ein
+per-bin gekoppelter Betragshüllkurven-Nachlauf mit 400-ms-Zeitkonstante,
+manuell gewählter Modus `Tonal`/`Noise`, ein wählbares Frequenzband von
+40–16000 Hz und eine vorläufige Zwei-Sekunden-Begrenzung ab dem letzten
+erkannten Signalanteil im jeweiligen Bin. Der Effekt addiert nur den
+Hüllkurvenüberschuss zum Eingang; er verkürzt nicht. Ein einfacher
+Sample-Peak-Schutz greift nur bei zusätzlichem Tail und ist kein
+True-Peak-Schutz. Parameter und Linux-Nachweise sind im
+[Prüfbericht](../verification/tail-prototype.md) dokumentiert.
+
+Der folgende Entscheidungsvergleich und die Verfahrensbeschreibung halten
+den ursprünglichen Vorschlag fest. Insbesondere sind 500–1500 Hz und
+`tau = 250 ms` Vorschlagswerte, nicht die aktuelle Implementierung.
 
 ## Entscheidungsfrage und Muss-Anforderungen
 
@@ -12,14 +29,12 @@ vorhandenen neutralen STFT-Kern als Nächstes untersucht werden, um das in der
 Vision benannte Verlängerungsrisiko zu klären, ohne Engine-Architektur oder
 Abhängigkeiten grundsätzlich zu ändern?
 
-**Belegt:** `NeutralStft` verwendet N=2048, Hop=512, sqrt(periodische Hann),
-PFFFT und WOLA. Die neutrale Verarbeitung meldet 2048 Samples Latenz; das
-Prüfprotokoll berichtet dieselbe Impulslatenz in den ausgeführten
-Offline-/Linux-Prüfungen. Der Kern hat noch keine Decay-Verarbeitung. Die
-Vision sieht STFT/Hüllkurvenverfolgung fürs Verkürzen und Fortführung
-tonaler/rauschhafter Anteile fürs Verlängern vor. PB-03 und PB-04 sind offen;
-der vollständige erste Build soll beide Richtungen in verschiedenen
-Frequenzbereichen zugleich hörbar machen.
+**Zum Zeitpunkt des ursprünglichen Vorschlags:** `NeutralStft` verwendete
+N=2048, Hop=512, sqrt(periodische Hann), PFFFT und WOLA; der Kern hatte noch
+keine Decay-Verarbeitung. Inzwischen ist der beschriebene Tail-Versuch
+hinzugekommen. PB-03 und der vollständige PB-04 bleiben offen; der erste
+vollständige Build soll beide Richtungen in verschiedenen Frequenzbereichen
+zugleich hörbar machen.
 
 Für **diesen Versuch**, nicht als Abnahme des vollständigen Builds, gelten:
 
@@ -58,7 +73,10 @@ Hörversuchen untersucht. Es werden keine ungewichteten Punktzahlen vergeben.
 | Wechselkosten / Reversibilität | Niedrig; der zusätzliche Abwärts-Expander lässt sich lokal abschalten. | Niedrig bis mittel; optionaler Synthesezweig und begrenzter Zustand im vorhandenen Kern. Abschalten des Zweigs erhält den neutralen Pfad. Keine FFT- oder Plugin-Architekturänderung; dennoch erhöht jeder dauerhafte Zustand Review- und Testaufwand. |
 | Evidenz / offene Punkte | Die Vision nennt Hüllkurvenverfolgung als Richtung fürs Verkürzen; ein entsprechender Algorithmus ist nicht im Kern implementiert oder gemessen. | Die Vision benennt Fortführung tonaler/rauschhafter Anteile als Richtung, nicht als validiertes Verfahren. Der bestehende Kern kann Frames nur bei fortlaufenden Callback-Aufrufen verarbeiten; Verhalten bei Host-Suspendierung/Tail-Meldung und die Stilleerkennung sind nicht belegt. |
 
-## Vorgeschlagener Versuch
+## Ursprünglich vorgeschlagener Versuch
+
+Der nachfolgende Algorithmusentwurf wurde nicht exakt implementiert und ist
+keine Beschreibung des aktuellen DSP-Verhaltens.
 
 **Option B wird als kleinster nächster Risikoversuch vorgeschlagen.** Sie
 konzentriert sich auf eine einzelne, im Test festgelegte Bandmaske und

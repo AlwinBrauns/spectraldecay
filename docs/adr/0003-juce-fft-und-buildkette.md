@@ -1,6 +1,6 @@
 # 0003 – JUCE-Version, FFT und Buildkette für den neutralen Prototyp
 
-- **Status:** vorgeschlagen
+- **Status:** Im Prototyp umgesetzt; keine langfristige Produktarchitektur-Freigabe
 - **Datum:** 2026-11-15
 - **Entscheider:** Produktverantwortung; Lizenzfragen erforderlichenfalls mit Rechtsberatung
 - **Bezug:** [0001 – Architektur für den neutralen Prototyp](0001-prototyp-architektur.md), [0002 – Lizenzoptionen](0002-lizenzmodell.md), [Spec neutraler Durchlauf](../specs/neutraler-durchlauf.md), [QS-01/QS-02/QS-05](../quality/szenarien.md)
@@ -17,6 +17,11 @@ freigegeben, aber FFT, Fenster, Hop und Versionen offengelassen. ADR 0002 hat
 AGPLv3 als Lizenzrichtung freigegeben, aber weder eine JUCE-Version noch
 deren konkreten Lizenzpfad festgelegt.
 
+Die folgenden Optionen und Quellenbewertungen halten den damaligen
+Recherchevorschlag fest. Der aktuelle Implementierungs- und Teststand steht
+unter [Entscheidung und aktuellem Stand](#entscheidung-und-aktueller-stand)
+und in den verlinkten Prüfberichten.
+
 **Muss-Anforderungen für diesen Vorschlag:**
 
 - JUCE/C++-VST3 für Windows x86-64; DSP-Kern unabhängig von JUCE-Processor,
@@ -28,8 +33,11 @@ deren konkreten Lizenzpfad festgelegt.
 - Die konkrete JUCE- und FFT-Lizenz, das tatsächlich eingebettete VST3-SDK
   und wesentliche Drittkomponenten müssen versioniert und inventarisierbar
   sein.
-- Dieser Vorschlag genehmigt **keine** Abhängigkeitseinbindung, Installation,
-  Implementierung oder Verteilung. Das erfordert eine gesonderte Freigabe.
+- Zum Zeitpunkt dieses Vorschlags waren Einbindung und Implementierung noch
+  nicht freigegeben. Der aktuelle Prototyp verwendet inzwischen die unten
+  genannten Commit-gepinnten Quellen; eine Distributionsfreigabe folgt daraus
+  nicht. Siehe [Prüfbericht](../verification/tail-prototype.md) und
+  [Drittanbieterinventar](../../THIRD_PARTY_NOTICES.md).
 
 **Unbestätigte Versuchswerte:** N=2048, Hop=512 und
 sqrt(periodische Hann) werden hier als zu untersuchende Versuchskonfiguration
@@ -60,12 +68,12 @@ Punktzahlen vergeben.
 
 ### Abwägung und Empfehlung
 
-**Vorgeschlagene Kombination:** JUCE **9.0.5**, Tag `9.0.5`, voller
+**Ursprünglich vorgeschlagene Kombination:** JUCE **9.0.5**, Tag `9.0.5`, voller
 Commit-SHA
 `d60b7a78030661574a615b586d9325ba7a7fa7dd`, plus PFFFT **v1.3.0**,
 voller Commit-SHA
-`179a48d486cbee8ec5416e5c163ad575c2efe1f1`. PFFFT ist ein Vorschlag, keine
-Einbindung.
+`179a48d486cbee8ec5416e5c163ad575c2efe1f1`. Zum Zeitpunkt dieses Vorschlags
+war PFFFT noch nicht eingebunden; der aktuelle Prototyp verwendet es.
 
 JUCE 9.0.5 ist ein tatsächlicher stabiler Release-Tag vom 2026-11-02. Der
 taggebundene [JUCE SPDX-SBOM](https://github.com/juce-framework/JUCE/blob/9.0.5/JUCE.spdx.json)
@@ -133,7 +141,12 @@ Für Linux kann derselbe DSP-Kern separat mit einem unterstützten C++17-
 Compiler getestet werden; ein Linux-Lauf ersetzt den Windows-/Ableton-
 Nachweis nicht.
 
-## Vorgeschlagener Validierungsschritt
+## Ursprünglich vorgeschlagener Validierungsschritt
+
+Der folgende Harness-Plan ist ein Vorschlag aus der Recherchephase; er
+beschreibt nicht vollständig die inzwischen ausgeführte Validierung. Die
+tatsächlichen Linux-Build- und Testresultate sind im
+[Prüfbericht](../verification/neutral-prototype.md) dokumentiert.
 
 Kleinster aussagekräftiger Schritt nach gesonderter Nutzerfreigabe:
 ein schmaler **DSP-/FFT-Harness ohne Plugin und ohne GUI**, der genau eine
@@ -148,26 +161,20 @@ Messwerte berichten; verbindliche CPU- und Neutralitätsschwellen bleiben
 offen, wie in Spec und QS-05 markiert. Erst danach folgt der separate
 VST3-/Ableton-Live-12-Hostnachweis.
 
-## Entscheidung
+## Entscheidung und aktueller Stand
 
-**Vorgeschlagen, nicht freigegeben:** JUCE 9.0.5 an obigem Commit und
-PFFFT v1.3.0 an obigem Commit für den neutralen Untersuchungspfad prüfen.
-PFFFT wird gegenüber JUCEs Standard-FFT empfohlen, weil die festgehaltene
-Echtzeitregel einen Callback-Lock ausschließt und PFFFT den kleinsten
-konkreten, portablen Ersatz mit dokumentierten, vorbereitbaren Puffern
-darstellt. JUCE bleibt auf die Plugin-/Host-Hülle beschränkt; der
-plattformunabhängige DSP-Kern bleibt separat.
+**Im Prototyp umgesetzt:** JUCE 9.0.5 und PFFFT v1.3.0 werden an den oben
+genannten Commits bezogen. JUCE bildet die Plugin-/Host-Hülle; der
+plattformunabhängige DSP-Kern nutzt PFFFT. N=2048/Hop=512/sqrt(periodische
+Hann) ist die implementierte Versuchskonfiguration, keine verbindliche
+Produktentscheidung. Der neutrale Pfad und die spätere Tail-Erweiterung sind
+im [Prüfbericht](../verification/tail-prototype.md) nachgewiesen.
 
-Die **Produktverantwortung/Nutzerin oder der Nutzer** muss vor jedem Bezug,
-Einbinden oder Implementieren ausdrücklich entscheiden über:
-
-1. JUCE 9.0.5 und die Konsequenz `AGPL-3.0-only` im Gegensatz zur eigenen
-   vorgesehenen `AGPL-3.0-or-later`-Kennung;
-2. den zusätzlichen PFFFT-Baustein und sein Lizenz-/Notice-Inventar;
-3. die Konfiguration N=2048/Hop=512/sqrt(periodische Hann) als Versuchswert
-   oder als verbindliche Prototypkonfiguration;
-4. ob weitere rechtliche Prüfung (einschließlich späterer proprietärer
-   Distribution und VST3-Markenregeln) vor einem Build erforderlich ist.
+Die frühere Empfehlung zugunsten von PFFFT bezog sich auf den JUCE-FFT-
+Standardpfad mit Callback-Lock. Sie war kein Leistungsnachweis für PFFFT.
+Lizenzbewertung, Rechteinhaberschaft, Distributionspflichten und mögliche
+spätere Produktalternativen bleiben offen; siehe [ADR 0002](0002-lizenzmodell.md)
+und das [Drittanbieterinventar](../../THIRD_PARTY_NOTICES.md).
 
 ## Konsequenzen und offene Punkte
 
@@ -181,10 +188,12 @@ Einbinden oder Implementieren ausdrücklich entscheiden über:
   Normierung, nicht konstanter WOLA-Gain, Nullrest abhängig von
   Blockgrenzen, Allokation/Lock im Callback, nicht tragbare CPU oder
   abweichende Hostlatenz.
-- **Offen / nicht belegt:** keine Messung von CPU, Neutralität, Latenz,
-  hörbaren Artefakten oder PFFFT-Callbackverhalten im konkreten Plugin;
-  kein Windows-/Ableton-/Linux-Build; keine rechtliche Bewertung der
-  Lizenzkombination oder Vertriebssituation. JUCEs mitgelieferte
+- **Offen / nicht belegt:** kein vollständiger Echtzeitnachweis und keine
+  Windows-/Ableton-Prüfung; offene numerische und hörbezogene Produktgrenzen
+  sind nicht abgenommen. Linux-Build und -Tests sind im neutralen
+  [Prüfprotokoll](../verification/neutral-prototype.md) nachgewiesen. Keine
+  rechtliche Bewertung der Lizenzkombination oder Vertriebssituation.
+  JUCEs mitgelieferte
   VST3-SDK-README enthält ältere Hinweise auf eine zu unterzeichnende
   Vereinbarung, während Steinbergs aktuelle 3.8-Lizenzseite MIT ohne
   Mitgliedschaft/Unterschrift beschreibt. Für tatsächliche Pflichten und

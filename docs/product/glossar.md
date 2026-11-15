@@ -2,8 +2,9 @@
 
 Dieses Glossar schafft eine gemeinsame Sprache für Produkt, Entwicklung und Tests.
 Es beschreibt die Begriffe aus der [Produktvision](product-vision.md); es legt
-keine neuen Anforderungen, Messverfahren oder Akzeptanzschwellen fest.
-Das Plugin ist bislang ein Zielbild, keine bestehende Implementierung.
+keine neuen Anforderungen, Messverfahren oder Akzeptanzschwellen fest. Ein
+experimenteller Plugin-Prototyp existiert, bildet aber nur einen Teil des
+Produktziels ab.
 
 ## Klang und Bearbeitung
 
@@ -40,13 +41,13 @@ Das Plugin ist bislang ein Zielbild, keine bestehende Implementierung.
 | Begriff | Bedeutung im Projekt |
 | --- | --- |
 | **Spektralanalyse** | Untersuchung des Signals nach seinen Frequenzanteilen über die Zeit. Sie dient der geplanten Verarbeitung und der Anzeige. |
-| **STFT** | Short-Time Fourier Transform: Analyse eines Signals in aufeinanderfolgenden kurzen Zeitfenstern, um sein zeitabhängiges Spektrum zu bestimmen. Fenster- und Schrittgrößen sind noch nicht festgelegt. |
+| **STFT** | Short-Time Fourier Transform: Analyse eines Signals in aufeinanderfolgenden kurzen Zeitfenstern, um sein zeitabhängiges Spektrum zu bestimmen. Der Prototyp verwendet FFT 2048 und Hop 512; die Konfiguration des späteren Produkts bleibt offen. |
 | **Hüllkurve / Hüllkurvenverfolgung** | Die Hüllkurve beschreibt die zeitliche Entwicklung einer Signalgröße; ihre Verfolgung ist als Teil der spektralen Verkürzung vorgesehen. Die genaue Größe und das Verfahren sind offen. |
 | **Latenz** | Zeitliche Verzögerung zwischen Eingang und Ausgang durch die Verarbeitung. Die tatsächliche Plugin-Latenz soll korrekt an den Host gemeldet werden. |
 | **Latenzkompensierter Nulltest** | Vergleich zweier zeitlich entsprechend ihrer Latenzdifferenz ausgerichteter Signale durch Differenzbildung. Das verbleibende Differenzsignal zeigt Abweichungen; eine Toleranz ist noch offen. |
 | **True Peak** | Geschätzter höchster Signalspitzenwert unter Berücksichtigung möglicher Spitzen zwischen digitalen Abtastwerten. Für den aktiven Ausgangsschutz ist vorläufig höchstens −1 dBTP als Ziel vorgesehen. |
 | **DAW / Host** | Digital Audio Workstation beziehungsweise die Anwendung, die das Plugin lädt, Audio verarbeitet und Plugin-Zustand und Latenzinformationen verwaltet. |
-| **Plugin-Zustand** | Gespeicherte nutzerrelevante Einstellungen, die mit dem DAW-Projekt wiederhergestellt werden sollen, einschließlich der Decay-Kurve. |
+| **Plugin-Zustand** | Gespeicherte nutzerrelevante Einstellungen, die mit dem DAW-Projekt wiederhergestellt werden sollen, einschließlich der Decay-Kurve. Der aktuelle Prototyp speichert seine vier Versuchsparameter, noch keine Decay-Kurve. |
 | **VST3** | Das in der Vision vorgesehene Plugin-Format des ersten Entwicklungs-Builds. |
 | **JUCE** | Das in der Vision vorgesehene C++-Framework für den ersten Entwicklungs-Build. |
 

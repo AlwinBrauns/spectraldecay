@@ -1,6 +1,13 @@
 # Neutraler spektraler Durchlauf
 
-Status: Offline/Linux-VST3 verifiziert; numerische Abnahme und Windows-Nachweis offen
+Status: Neutraler Zwischenstand offline/Linux-VST3 verifiziert; numerische Abnahme und Windows-Nachweis offen
+
+Diese Spec beschreibt ausschließlich den neutralen STFT-Zwischenstand, nicht
+den aktuellen Gesamtumfang des Prototyps. Ein später hinzugefügter
+Verlängerungsversuch ist separat im
+[Prüfbericht zum Tail-Prototyp](../verification/tail-prototype.md)
+dokumentiert. Die offenen Neutralitätstoleranzen dieser Spec bleiben davon
+unberührt.
 
 Spec-Stufe: Spec Anchored
 

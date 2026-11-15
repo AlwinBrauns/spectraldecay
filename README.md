@@ -136,6 +136,9 @@ groesster Nullrest-Peak **-127,59 dBFS**, groesster Nullrest-RMS
 **-141,74 dBFS**; Blockgroessendifferenz im Versuch **0**.
 Diese Messwerte sind keine Abnahme offener Klangtoleranzen.
 Einzelheiten zum neutralen Build: [Pruefprotokoll](docs/verification/neutral-prototype.md).
+Der aktuelle Tail-Versuch und seine Grenzen sind separat im
+[Pruefbericht zum Tail-Prototyp](docs/verification/tail-prototype.md)
+dokumentiert.
 
 **Vorherige Erweiterung:** Linux-Build und 3/3 CTest-Programme erfolgreich;
 1914 Strukturchecks und 4180 Messzeilen im Offline-Lauf. Tonale und

@@ -58,7 +58,7 @@ Spectral Decay ist weder ein klassischer Lautstärke-EQ noch ein allgemeiner Hal
 
 ## Erster Entwicklungs-Build
 
-Der erste Entwicklungs-Build soll als VST3-Plugin auf Basis von JUCE und C++ laufen und zunächst unter Windows in Ableton Live 12 erprobt werden. Plattformübergreifender Quellcode und eine spätere Open-Source-Veröffentlichung sind Ziele. Für den neutralen Prototyp wurden Windows x86-64 und ein STFT-Untersuchungspfad sowie AGPLv3 als Lizenzrichtung freigegeben; konkrete Abhängigkeiten und Lizenzdetails bleiben offen. Siehe [Architektur](../adr/0001-prototyp-architektur.md) und [Lizenzmodell](../adr/0002-lizenzmodell.md). Er soll folgende Kernfunktionen demonstrieren:
+Der erste Entwicklungs-Build soll als VST3-Plugin auf Basis von JUCE und C++ laufen und zunächst unter Windows in Ableton Live 12 erprobt werden. Plattformübergreifender Quellcode und eine spätere Open-Source-Veröffentlichung sind Ziele. Für den neutralen Prototyp wurden Windows x86-64, ein STFT-Untersuchungspfad und AGPLv3 als Lizenzrichtung freigegeben. Die damals offenen Abhängigkeiten sind inzwischen für den Versuch auf JUCE 9.0.5 und PFFFT v1.3.0 festgelegt; Distributions- und Lizenzfragen bleiben offen. Siehe [Architektur](../adr/0001-prototyp-architektur.md), [Lizenzmodell](../adr/0002-lizenzmodell.md) und [Build-/FFT-Entscheidung](../adr/0003-juce-fft-und-buildkette.md). Er soll folgende Kernfunktionen demonstrieren:
 
 - Einen neutralen, überprüfbaren spektralen Signaldurchlauf.
 - Eine während der Wiedergabe editierbare Decay-Kurve; vorläufig drei verschiebbare Punkte, fließende Übergänge und eine Skala von −5 bis +5.
@@ -66,7 +66,22 @@ Der erste Entwicklungs-Build soll als VST3-Plugin auf Basis von JUCE und C++ lau
 - Mono- und gekoppelte Stereo-Bearbeitung, Dry/Wet und Bypass.
 - Einen Ausgangsschutz mit dem vorläufigen Ziel von höchstens −1 dBTP. Er hat bei neutraler Einstellung Vorrang, ist aber bei Bypass und 100 % Dry nicht aktiv.
 
-Der zusätzliche Nachklang soll nach Stille am Eingang vorläufig spätestens nach zwei Sekunden ausgeblendet sein. Die Stille-Erkennung und ihre Auswirkung auf kontinuierliche Signale sind noch zu klären. Der Build ist ausdrücklich experimentell; hörbare Artefakte sind zunächst akzeptabel. Spektralanzeige, Projektspeicherung und Automation dürfen in diesem Build noch fehlen. Ein technischer Prototyp darf schrittweise entstehen; der erste Entwicklungs-Build ist erst dann vollständig, wenn beide Bearbeitungsrichtungen gleichzeitig in verschiedenen Frequenzbereichen hörbar funktionieren.
+Der zusätzliche Nachklang soll nach Stille am Eingang vorläufig spätestens nach zwei Sekunden ausgeblendet sein. Die Stille-Erkennung und ihre Auswirkung auf kontinuierliche Signale sind noch zu klären. Der Build ist ausdrücklich experimentell; hörbare Artefakte sind zunächst
+akzeptabel. Spektralanzeige und Automation dürfen in diesem Build noch
+fehlen. Die Projekteinstellungen sollen wiederherstellbar sein; der
+vorhandene Prototyp speichert seine vier Versuchsparameter, aber noch keine
+Decay-Kurve. Ein technischer Prototyp darf schrittweise entstehen; der erste
+Entwicklungs-Build ist erst dann vollständig, wenn beide Bearbeitungsrichtungen
+gleichzeitig in verschiedenen Frequenzbereichen hörbar funktionieren.
+
+**Stand des vorhandenen Prototyps:** Implementiert sind ein neutraler STFT-
+Signalweg und ein begrenzter, experimenteller Verlängerungszweig mit
+generischem Editor. Es gibt noch keine Verkürzung, keinen Kurveneditor, kein
+Dry/Wet und keinen eigenen Bypass; der Tail-Schutz ist kein True-Peak-Schutz.
+Die vier Versuchsparameter werden im Plugin-Zustand gespeichert. Der
+Prototyp erfüllt damit noch nicht den beschriebenen ersten Entwicklungs-Build;
+Einzelheiten und Nachweise stehen im
+[Prüfbericht zum Tail-Prototyp](../verification/tail-prototype.md).
 
 ## Erfolgskriterien
 

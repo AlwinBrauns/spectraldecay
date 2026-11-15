@@ -77,3 +77,23 @@ Prototyps festgelegt.
 | Zielwert | 0 Callback-Allokationen und 0 Callback-Locks als Muss; CPU-Grenze, Messdauer, Referenzhardware und Neutralitätstoleranz offen – nach dem Prototyp festzulegen. |
 | Priorität / Risiko | Vorschlag: hoch, da ein Callback-Lock Dropouts oder unbegrenztes Warten verursachen kann und die FFT den Kern des spektralen Pfads bildet. |
 | Prüfung | Statischer Quellreview plus Instrumentierung im freigegebenen FFT-Harness; danach Hosttest. Messwerte ohne abgestimmte CPU-/Nullrestgrenze nur berichten. |
+
+**Aktueller Befund:** Der eigene DSP-Pfad wurde statisch auf die genannten
+Regeln geprüft; es gab keine Allokations-, Lock- oder Laufzeitinstrumentierung.
+JUCE 9.0.5 sperrt im VST3-Wrapper vor dem eigenen Callback. Das Szenario ist
+für den gesamten VST3-Audiopfad damit nicht erfüllt; siehe
+[Prüfbericht](../verification/neutral-prototype.md#echtzeit-quellreview-und-restrisiken).
+
+## QS-06 – Begrenzter Tail-Versuch
+
+| Feld | Inhalt |
+| --- | --- |
+| Qualitätsmerkmal | Audioqualität / Leistungseffizienz |
+| Auslöser | Tonaler oder rauschhafter Anteil fällt im ausgewählten Frequenzband ab |
+| Umgebung | Offline und Linux-VST3-Test; 44,1/48 kHz, Mono/Stereo und verschiedene Blockgrößen in den vorhandenen Tests. Windows-/Ableton- und Hörtest offen. |
+| Artefakt | Experimenteller Tail-Zweig des STFT-Prototyps |
+| Erwartete Reaktion | Im gewählten Band wird zusätzliche, abklingende Energie erzeugt. Modus und Band werden manuell gewählt; automatische Klassifikation ist nicht Teil des Versuchs. |
+| Messgröße | Tail-RMS/-Peak, Latenz, Blockgrößeninvarianz, Endlichkeit, Stereokanaltrennung und Ende des zusätzlichen Tails. |
+| Zielwert | Vorläufig spätestens zwei Sekunden nach dem letzten erkannten Signalanteil im jeweiligen Bin; Erkennungsschwelle, Messdefinition und weitere Qualitätsgrenzen sind offen. |
+| Priorität / Risiko | Hoch; der Versuch untersucht die Verlängerung, beweist aber weder natürliche Klangqualität noch die vollständige Produktfunktion. |
+| Prüfung | Deterministische Offline-Signale und Processor-/VST3-Tests; aktuelle Umsetzung und Linux-Prüfergebnis siehe [Tail-Prüfbericht](../verification/tail-prototype.md). |

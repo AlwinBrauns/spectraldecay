@@ -5,14 +5,21 @@
 - **Entscheider:** Produktverantwortung, Freigabe am 2026-11-15
 - **Bezug:** [PB-01/PB-02](../product/product-backlog.md#vorgeschlagene-reihenfolge), [Spec neutraler Durchlauf](../specs/neutraler-durchlauf.md), [QS-01/QS-02](../quality/szenarien.md), [Lizenzoptionen](0002-lizenzmodell.md)
 
+**Implementierungsstand:** Der neutrale STFT-Untersuchungspfad ist inzwischen
+mit FFT 2048/Hop 512 sowie gepinnten JUCE-/PFFFT-Quellen umgesetzt; Linux-
+Build und Offline-/Processor-/VST3-Tests sind erfolgreich. Das belegt den
+Prototyp, nicht die langfristige Produktarchitektur oder offene
+Neutralitätsgrenzen. Der aktuelle Verlängerungsversuch ist im
+[Prüfbericht](../verification/tail-prototype.md) beschrieben.
+
 ## Kontext
 
-**Belegt:** Der erste Entwicklungs-Build soll als JUCE/C++-VST3 in Ableton
-Live 12 unter Windows laufen. Ein neutraler spektraler Durchlauf ist ein
-Zwischenschritt; Verkürzung und Verlängerung sind für den vollständigen Build
-notwendig. Die Produktverantwortung hat STFT als Untersuchungspfad und
-Windows x86-64 als Testplattform freigegeben. Konkrete Abhängigkeiten und
-Messgrenzen bleiben offen.
+**Belegt zum Entscheidungszeitpunkt:** Der erste Entwicklungs-Build soll als
+JUCE/C++-VST3 in Ableton Live 12 unter Windows laufen. Ein neutraler
+spektraler Durchlauf ist ein Zwischenschritt; Verkürzung und Verlängerung
+sind für den vollständigen Build notwendig. Die Produktverantwortung hat
+STFT als Untersuchungspfad und Windows x86-64 als Testplattform freigegeben.
+Konkrete Abhängigkeiten und Messgrenzen waren damals offen.
 
 **Ziel dieses ADR:** Eine Grundlage für den separat zu beauftragenden
 neutralen Prototyp auswählen, ohne das Verlängerungsverfahren oder das

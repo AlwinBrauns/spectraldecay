@@ -10,15 +10,17 @@
 Eine spätere Open-Source-Veröffentlichung ist angestrebt. Die
 Produktverantwortung hat die AGPLv3-Richtung für eigenen Code und JUCE
 freigegeben. Ob später eine proprietäre Distribution gewünscht ist, bleibt
-offen. Es gibt noch keinen Projektlizenztext, keine gewählte JUCE-Version und
-keine freigegebene Abhängigkeit.
+offen. Seit dieser Entscheidung wurden ein Projektlizenztext und
+Drittanbieterinventar ergänzt sowie JUCE und PFFFT für den Prototyp fixiert.
+Eine abschließende Prüfung der konkreten Distribution und Rechteinhaberschaft
+ist damit nicht dokumentiert.
 Diese Übersicht ist keine Rechtsberatung; vor Nutzung und insbesondere vor
 Distribution sind die Bedingungen der konkret gewählten Version und der
 eigenen Situation zu prüfen.
 
-**Belegt, Stand 15.11.2026:** Die Module des aktuellen JUCE-Frameworks sind
+**Belegt, Stand 15.11.2026:** Die Module von JUCE 9.0.5 sind
 unter AGPLv3 oder der JUCE-Lizenz verfügbar
-([JUCE-Lizenzdatei](https://github.com/juce-framework/JUCE/blob/master/LICENSE.md)).
+([JUCE-Lizenzdatei](https://github.com/juce-framework/JUCE/blob/9.0.5/LICENSE.md)).
 Für JUCE 9 gelten die [JUCE-9-Bedingungen](https://juce.com/legal/juce-9-licence/);
 für andere Hauptversionen die jeweils zutreffenden Bedingungen. Der
 Starter-Tarif kann kostenlos sein, ist aber an Bedingungen gebunden; Indie
@@ -42,27 +44,30 @@ modifizierter Programme. Die genaue Anwendung hängt vom jeweiligen
 Nutzungsszenario ab; eine lokale Plugin-Nutzung ist nicht automatisch ein
 Netzwerkangebot.
 
-**VST3 ist separat:** Steinberg nennt für das VST3-SDK ab Version 3.8 die
-MIT-Lizenz; Urheber- und Lizenzhinweise sind nach deren Bedingungen
-mitzugeben. Marken-/Logonutzung unterliegt separaten Regeln
+**VST3 ist separat:** Das im verwendeten JUCE 9.0.5 enthaltene VST3-SDK ist
+Version 3.8.0 und unter MIT lizenziert; Urheber- und Lizenzhinweise sind nach
+deren Bedingungen mitzugeben. Das [Drittanbieterinventar](../../THIRD_PARTY_NOTICES.md)
+führt diese und weitere im Prototyp verwendete Komponenten auf.
+Marken-/Logonutzung unterliegt separaten Regeln
 ([Steinberg](https://steinbergmedia.github.io/vst3_dev_portal/pages/VST+3+Licensing/VST3+License.html)).
-Das belegt nicht, welche SDK-Version oder welche weiteren Drittkomponenten
-eine künftig gewählte JUCE-Version tatsächlich enthält. Deren Quellen,
-Versionen und Lizenzen vor Nutzung und Distribution einzeln prüfen.
+Vor einer Distribution sind die Quellen, Versionen und Bedingungen aller
+tatsächlich verwendeten Drittkomponenten einzeln zu prüfen.
 
 ## Entscheidung
 
 **Freigegeben:** Option A als Lizenzrichtung: eigener Code unter AGPL Version 3
 oder später (`AGPL-3.0-or-later`), JUCE unter AGPLv3. Die Entscheidung ist
-keine Freigabe zum Bezug einer bestimmten JUCE-Version und kein Abschluss
-eines JUCE-Tarifs. Ein Projektlizenztext wurde noch nicht hinzugefügt; der
-Rechteinhaber bleibt zu klären.
+keine Rechtsberatung und kein Abschluss eines JUCE-Tarifs. Der aktuelle
+Prototyp verwendet JUCE 9.0.5 (mit AGPL-3.0-only oder kommerziellem
+Lizenzpfad) und PFFFT v1.3.0; der eigene Quelltext und die
+[Lizenz-/Abhängigkeitsnotices](../../THIRD_PARTY_NOTICES.md) sind vorhanden.
+Der Rechteinhaber und die Distributionsfreigabe bleiben zu klären.
 
-Vor Bezug und Distribution klären: Soll später eine proprietäre Variante
-möglich sein? Wer hält die Rechte, wer entwickelt mit, und sollen Prototyp-
-Binärdateien an Dritte verteilt werden? Rechte an fremden Beiträgen und
-gegebenenfalls Rechtsberatung berücksichtigen. Die Bedingungen der konkreten
-Abhängigkeiten vor deren Bezug prüfen.
+Vor einer weiteren Abhängigkeitseinbindung oder Distribution klären: Soll
+später eine proprietäre Variante möglich sein? Wer hält die Rechte, wer
+entwickelt mit, und sollen Prototyp-Binärdateien an Dritte verteilt werden?
+Rechte an fremden Beiträgen und gegebenenfalls Rechtsberatung berücksichtigen.
+Die Bedingungen aller tatsächlich verwendeten Versionen prüfen.
 
 ## Konsequenzen
 
@@ -74,8 +79,7 @@ Abhängigkeiten vor deren Bezug prüfen.
   aufwendig sein.
 - **Frühe Warnsignale:** Unklarer Lizenznehmer, fehlende Rechte an Beiträgen,
   nicht erfüllter Tarif oder unvollständiges Drittanbieterinventar.
-- **Folgearbeiten:** Rechteinhaber klären, danach passende Lizenztexte und
-  Hinweise hinzufügen. Vor Abhängigkeiten Versionen
-  und Lizenzpfad festhalten, vor Distribution ein Inventar sowie Quellen-
-  und Hinweispflichten prüfen. Keine Rechtskonformität wurde hier abschließend
-  festgestellt.
+- **Folgearbeiten:** Rechteinhaber klären und vor einer Distribution
+  Lizenzpfad, Quellbereitstellung sowie alle tatsächlich verwendeten
+  Drittanbietertexte prüfen. Die vorhandenen Notices und das
+  Quellinventar sind kein abschließender Nachweis der Distributionskonformität.
