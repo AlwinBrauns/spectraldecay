@@ -27,12 +27,12 @@ Qualitätsszenarien machen implizite Erwartungen messbar. Priorität und Akzepta
 
 ## Typische Szenarien für dieses Projekt (Kandidaten, Werte offen)
 
-- **Neutraler Durchlauf:** Bei flacher Kurve und Wet 100 % ist das latenzkompensierte Differenzsignal zum Eingang unter X dBFS.
-- **Decay-Genauigkeit:** Bei Testsignal mit bekannter Abklingzeit weicht die gemessene Abklingzeit im Zielband um höchstens Y % vom eingestellten Wert ab.
+- **Neutraler Durchlauf:** Im neutralen spektralen Pfad ist das latenzkompensierte Differenzsignal zum Eingang unter X dBFS; aktiven Ausgangsschutz bei der Wahl des Testpegels berücksichtigen.
+- **Decay-Wirkung:** Bei einem geeigneten Testsignal verändert sich die gemessene Abklingzeit im Zielband in die eingestellte Richtung; Messdefinition und erforderliche Stärke sind offen.
 - **Latenz:** Gemeldete Latenz entspricht der gemessenen Latenz exakt (Samples).
 - **CPU:** Bei 48 kHz, Blockgröße 64, Stereo bleibt die Verarbeitungszeit pro Block unter Z % der Blockdauer auf Referenzhardware.
-- **Pegel:** Bei maximaler Verlängerung (2 s) überschreitet der True Peak den Eingangs-True-Peak um höchstens W dB.
+- **Pegel:** Bei aktivem Ausgangsschutz ist höchstens −1 dBTP als vorläufiges Ziel vorgesehen; Messverfahren, Toleranz sowie Ausnahmen für Bypass und 100 % Dry beachten.
 - **Stereo:** Im gekoppelten Modus bleibt die Korrelation/Balance eines Stereo-Testsignals innerhalb definierter Grenzen.
 - **Zustand:** Nach Speichern und erneutem Laden des DAW-Projekts sind alle Parameter und Kurvenpunkte identisch.
 
-Platzhalter X/Y/Z/W nur durch abgestimmte Werte ersetzen. Messverfahren: Skill `audio-verifikation`.
+Platzhalter nur durch abgestimmte Werte ersetzen. Messverfahren: Skill `audio-verifikation`.

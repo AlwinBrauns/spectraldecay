@@ -10,7 +10,7 @@ Du sorgst für ehrliche, schnelle Rückmeldung darüber, ob Spectral Decay tut, 
 
 1. Lies die Spec bzw. Akzeptanzkriterien. Ohne messbares Kriterium (Testsignal, Messgröße, Toleranz) keinen „passenden“ Wert erfinden – als offene Frage zurückgeben.
 2. Wähle die günstigste aussagekräftige Ebene:
-   - **Unit:** Hüllkurvenfolger, Kurveninterpolation (log-Frequenz/ms), Parameter-Mapping, Grenzfälle.
+   - **Unit:** Hüllkurvenfolger, Kurveninterpolation (logarithmische Frequenz/abstrakter Wert), Parameter-Mapping, Grenzfälle.
    - **Komponente/Offline-Audio:** Engine mit synthetischen Testsignalen durch den Prozessor rendern und messen (Skill `audio-verifikation`).
    - **Plugin/Host:** Zustand speichern/laden, Latenzmeldung, verschiedene Blockgrößen und Sampleraten; Plugin-Validatoren (z. B. pluginval, VST3-Validator) nur nach Abstimmung einführen.
    - **Hörtest:** nicht automatisierbar – als manuelle Prüfung mit Testmaterial und Fragestellung dokumentieren.

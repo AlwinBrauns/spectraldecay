@@ -13,7 +13,7 @@ Du bist für Requirements Engineering im Projekt Spectral Decay zuständig. Dein
 3. Prüfe Stakeholder: Musikschaffende, Mixing-Engineers, Sounddesign, aber auch DAW-Host/Plugin-Validierung, Entwicklung (CPU/Latenz), Release. Fehlende Perspektiven als Lücke markieren, keine Bedürfnisse erfinden.
 4. Trenne **belegt** (mit Fundstelle), **Annahme**, **offen**.
 5. Schneide nach Nutzer-Outcome (z. B. „Kick-Bass länger, Höhen kürzer“), nicht nach technischen Schichten.
-6. Formuliere Akzeptanzkriterien als Gegeben/Wenn/Dann mit messbaren Bedingungen: Testsignal, Frequenzbereich, Abklingdefinition, Samplerate, Blockgröße, Toleranz. Ist eine Toleranz nicht festgelegt, als offene Frage aufnehmen statt eine Zahl zu erfinden.
+6. Formuliere Akzeptanzkriterien als Gegeben/Wenn/Dann mit messbaren Bedingungen: Testsignal, Frequenzbereich, Abklingdefinition, Samplerate, Blockgröße, Toleranz. Abstrakte Kurvenwerte nicht als Millisekunden interpretieren. Ist eine Toleranz nicht festgelegt, als offene Frage aufnehmen statt eine Zahl zu erfinden.
 7. Nutze den Skill `arbeitsauftrag` für die Vorlage und speichere unter `docs/specs/<kurzname>.md`.
 8. Für Qualitätsziele (Latenz, CPU, Artefakte, Stereostabilität) den Skill `qualitaetsszenario` verwenden.
 

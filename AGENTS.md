@@ -4,7 +4,7 @@ Spectral Decay ist ein geplantes VST3-Plugin (JUCE, C++), das die Abklingzeit ei
 
 ## Projektstand
 
-- Bisher existiert nur die Produktvision. Es gibt **noch keinen Code, kein Build-System und keine Tests**.
+- Bisher existieren Produktvision, Glossar, Business Goals und ein Produkt-Backlog sowie erste Spec- und Qualitätsszenario-Entwürfe. Es gibt **noch keinen Code, kein Build-System und keine Tests**.
 - Build-, Test- und Formatbefehle sind **offen**. Sobald sie existieren, hier eintragen; bis dahin keine Befehle erfinden.
 - Keine Toleranzen oder Akzeptanzschwellen festlegen, die die Vision ausdrücklich offen lässt – als Annahme oder offene Frage markieren.
 
@@ -13,6 +13,7 @@ Spectral Decay ist ein geplantes VST3-Plugin (JUCE, C++), das die Abklingzeit ei
 | Inhalt | Ort |
 | --- | --- |
 | Produkt, Vision, Stakeholder, Glossar | `docs/product/` |
+| Business Goals | `docs/business-goals/` |
 | Specs, Stories, Arbeitsaufträge | `docs/specs/` |
 | Architekturentscheidungen (ADRs) | `docs/adr/NNNN-titel.md` |
 | Qualitätsszenarien | `docs/quality/` |
@@ -36,9 +37,10 @@ Spectral Decay ist ein geplantes VST3-Plugin (JUCE, C++), das die Abklingzeit ei
 ## Domänenregeln (Kurzform)
 
 - **Audio-Thread ist Echtzeit:** keine Allokation, keine Locks, kein I/O, kein Logging in `processBlock`. Details: [.github/instructions/realtime-audio.instructions.md](.github/instructions/realtime-audio.instructions.md).
-- Latenz korrekt an den Host melden; Zustand vollständig speichern und wiederherstellen.
+- Latenz korrekt an den Host melden; Zustand als Produktziel vollständig speichern und wiederherstellen. Der erste experimentelle Build darf noch ohne Projektspeicherung auskommen.
 - Neutraler Durchlauf muss per latenzkompensiertem Nulltest überprüfbar bleiben.
-- Verlängerung begrenzen (erste Ausbaustufe max. 2 s, Tail-Energie und True Peak beobachten).
+- Verlängerung begrenzen (vorläufig spätestens 2 s nach Stille am Eingang ausblenden; Stille-Erkennung offen).
+- Ausgangsschutz: vorläufig höchstens −1 dBTP anstreben; bei Bypass und 100 % Dry ist der Schutz nicht aktiv. Messverfahren und Übergänge sind offen.
 
 ## Spezialisierte Agenten und Skills
 

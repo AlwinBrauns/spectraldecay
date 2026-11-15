@@ -1,5 +1,9 @@
 # Produktvision: Spectral Decay
 
+Ergänzend: [Glossar](glossar.md),
+[Business Goals](../business-goals/business-goals.md) und
+[Produkt-Backlog](product-backlog.md).
+
 ## Vision
 
 Spectral Decay gibt Musikschaffenden die Möglichkeit, den Ausklang eines Sounds so intuitiv und gezielt zu formen wie seine Frequenzbalance mit einem Equalizer. Einzelne Frequenzbereiche sollen unabhängig voneinander kürzer oder länger ausklingen können, während Charakter, Transienten und räumlicher Eindruck des Originals möglichst erhalten bleiben.
@@ -29,7 +33,7 @@ Spectral Decay schließt diese Lücke mit einer frequenzabhängigen, dynamischen
 
 ## Produkterlebnis
 
-Die zentrale Bedienoberfläche ist ein EQ-ähnlicher Kurveneditor. Kontrollpunkte verbinden eine Frequenz mit einer gewünschten Abklingzeit in Millisekunden. Punkte lassen sich hinzufügen, verschieben und entfernen; logarithmische Achsen ermöglichen eine übersichtliche und präzise Bedienung. Eine Spektralanzeige soll die Orientierung am Eingangssignal unterstützen.
+Die zentrale Bedienoberfläche ist ein EQ-ähnlicher Kurveneditor. Kontrollpunkte verbinden eine Frequenz mit einem abstrakten Wert: Negative Werte verkürzen, positive verlängern und 0 lässt den betreffenden Frequenzbereich neutral. Die Wirkung soll mit dem Abstand von 0 stufenlos zunehmen; die Werte sind keine zugesagten Abklingzeiten in Millisekunden. Eine logarithmische Frequenzachse soll die Orientierung erleichtern. Für spätere Ausbaustufen sind frei hinzufügbare und entfernbare Punkte sowie eine Spektralanzeige vorgesehen.
 
 Die Bearbeitung reagiert auf das Eingangssignal und verfolgt dessen Ausklang, statt lediglich eine feste Frequenzkurve auf den Pegel anzuwenden. Nutzerinnen und Nutzer können:
 
@@ -48,31 +52,32 @@ Spectral Decay ist weder ein klassischer Lautstärke-EQ noch ein allgemeiner Hal
 
 1. **Musikalisch und transparent:** Der bearbeitete Klang soll natürlich bleiben; Transienten, Phase und Stereobild verdienen besondere Aufmerksamkeit.
 2. **Gezielt statt pauschal:** Frequenzbereiche sollen unabhängig voneinander und in beide Zeitrichtungen bearbeitet werden können.
-3. **Verständlich und direkt:** Eine vertraute Kurvendarstellung und Abklingzeiten in Millisekunden machen die Wirkung nachvollziehbar.
+3. **Verständlich und direkt:** Eine vertraute Kurvendarstellung und eine Skala von kürzer über neutral bis länger machen die Wirkung nachvollziehbar.
 4. **Vergleichbar und kontrollierbar:** Neutraler Durchlauf, Bypass und Dry/Wet erleichtern den direkten Hörvergleich.
 5. **Verlässlich im Produktionsalltag:** Das Plugin soll in Echtzeit stabil arbeiten, seine Latenz korrekt an den Host melden und seinen Zustand mit dem DAW-Projekt speichern.
 
 ## Erster Entwicklungs-Build
 
-Der erste Entwicklungs-Build soll als VST3-Plugin auf Basis von JUCE und C++ in einer DAW laufen und folgende Kernfunktionen demonstrieren:
+Der erste Entwicklungs-Build soll als VST3-Plugin auf Basis von JUCE und C++ laufen und zunächst unter Windows in Ableton Live 12 erprobt werden. Plattformübergreifender Quellcode und eine spätere Open-Source-Veröffentlichung sind Ziele; Prozessorarchitektur und Lizenzmodell sind noch offen. Er soll folgende Kernfunktionen demonstrieren:
 
-- Echtzeit-Spektralanalyse und ein neutraler, überprüfbarer Signaldurchlauf.
-- Eine editierbare Decay-Kurve.
+- Einen neutralen, überprüfbaren spektralen Signaldurchlauf.
+- Eine während der Wiedergabe editierbare Decay-Kurve; vorläufig drei verschiebbare Punkte, fließende Übergänge und eine Skala von −5 bis +5.
 - Frequenzabhängiges Verkürzen und Verlängern, auch gleichzeitig in verschiedenen Bereichen.
-- Dry/Wet und neutraler Bypass für den direkten Vergleich.
+- Mono- und gekoppelte Stereo-Bearbeitung, Dry/Wet und Bypass.
+- Einen Ausgangsschutz mit dem vorläufigen Ziel von höchstens −1 dBTP. Er hat bei neutraler Einstellung Vorrang, ist aber bei Bypass und 100 % Dry nicht aktiv.
 
-Die Verlängerung soll zunächst moderat und auf maximal zwei Sekunden begrenzt sein. Ein technischer Prototyp darf zunächst schrittweise entstehen; der erste Entwicklungs-Build ist erst dann vollständig, wenn beide Bearbeitungsrichtungen hörbar funktionieren.
+Der zusätzliche Nachklang soll nach Stille am Eingang vorläufig spätestens nach zwei Sekunden ausgeblendet sein. Die Stille-Erkennung und ihre Auswirkung auf kontinuierliche Signale sind noch zu klären. Der Build ist ausdrücklich experimentell; hörbare Artefakte sind zunächst akzeptabel. Spektralanzeige, Projektspeicherung und Automation dürfen in diesem Build noch fehlen. Ein technischer Prototyp darf schrittweise entstehen; der erste Entwicklungs-Build ist erst dann vollständig, wenn beide Bearbeitungsrichtungen gleichzeitig in verschiedenen Frequenzbereichen hörbar funktionieren.
 
 ## Erfolgskriterien
 
-Das zentrale Anwendungsszenario ist eine Kickdrum, deren Bass länger ausklingt, während die Höhen gleichzeitig schneller abfallen – ohne auffällige Modulation, hörbares Zerfallen oder eine aufgesetzte Hallfahne.
+Ein zentrales Anwendungsszenario ist eine Kickdrum, deren Bass länger ausklingt, während die Höhen gleichzeitig schneller abfallen. Für frühe Hörversuche sind außerdem Snare, komplexe Gemische, Vocals und akustische Aufnahmen interessant. Langfristig soll die Wirkung natürlich sein; für den experimentellen ersten Build sind Artefakte noch kein automatischer Ausschluss.
 
 Die Bewertung kombiniert Hörtests mit reproduzierbaren technischen Prüfungen:
 
-- Eingestellte und gemessene Abklingzeiten in geeigneten Testsignalen vergleichen.
+- An geeigneten Testsignalen prüfen, ob negative und positive Werte den Ausklang in die gewünschte Richtung verändern; Messdefinition und Toleranzen sind offen.
 - Neutralen Durchlauf auf Pegel- und Frequenzabweichungen sowie per latenzkompensiertem Nulltest prüfen.
 - Impulsfolgen, tonale und rauschhafte Signale sowie Stereo-Material auf Transientenverhalten, Artefakte und Stereostabilität untersuchen.
-- Bei Verlängerung Spitzenpegel und True Peak beobachten und die Tail-Energie begrenzen.
+- Ausgangsschutz und True Peak sowie die vorläufige Nachklanggrenze prüfen; Ausnahmen für Bypass und 100 % Dry beachten.
 - Echtzeitverhalten und tatsächliche, an den Host gemeldete Latenz messen.
 
 Konkrete Toleranzen und Akzeptanzschwellen müssen anhand des Prototyps festgelegt werden.

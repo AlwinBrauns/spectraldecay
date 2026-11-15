@@ -24,7 +24,10 @@ Referenz für den Skill `audio-verifikation`. Alle Signale synthetisch erzeugen;
 4. Lineare Regression im Bereich −5 dB bis −25 dB (T20) oder −5 dB bis −35 dB (T30); auf −60 dB extrapolieren.
 5. Rauschboden beachten: Integrationsende vor dem Rauschboden wählen.
 
-**Offen (projektweit zu klären):** Welche Definition „Abklingzeit in ms“ im Plugin bedeutet (T60, Zeit bis −X dB, Zeitkonstante τ). Bis zur Klärung immer angeben, welche Definition gemessen wurde.
+**Offen (projektweit zu klären):** Welche Definition für den Vergleich
+gemessener Abklingzeiten geeignet ist (T60, Zeit bis −X dB, Zeitkonstante τ).
+Die abstrakten Plugin-Werte geben keine bestimmte Zeit in Millisekunden vor.
+Bis zur Klärung immer angeben, welche Definition gemessen wurde.
 
 ## Pegel
 
