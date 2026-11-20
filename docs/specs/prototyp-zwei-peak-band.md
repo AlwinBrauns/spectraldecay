@@ -1,7 +1,8 @@
 # Prototyp 2: Bipolares Peak-Band
 
-Status: umgesetzt (Linux-Tests belegt; Windows-/Ableton-Hörtest und numerische
-Abnahmetoleranzen offen)
+Status: umgesetzt (Linux-Tests belegt; qualitativer Ableton-12-/Windows-11-
+Hörtest berichtet; formales Hostprotokoll und numerische Abnahmetoleranzen
+offen)
 Spec-Stufe: Spec First
 
 Implementierungs- und Prüfstand: [Prüfbericht Prototyp 2](../verification/peak-band-prototype-2.md);
@@ -76,7 +77,7 @@ Relevante Szenarien: [QS-06 bis QS-09](../quality/szenarien.md) (Tail-/Hörbefun
 ## Verifikation
 
 - **Automatisiert:** deterministische Offline-Tests für Neutralität, Latenz, Richtungswirkung, Frequenzselektivität, Tone/Noise-Zwischenwerte, Tail-Ende, Sample-Peak, Endlichkeit, Stereo und Blockgrößen; Processor-/VST3-Tests für Parameter und Zustand. AK1–AK8 jeweils gegen ihre beobachtbaren Kriterien prüfen. Numerische Toleranzen nicht aus dem Implementierungsergebnis ableiten, sondern vor formaler Abnahme festlegen.
-- **Manuell:** dokumentierter Windows-/Ableton-Hörtest mit Kick/Transient, abklingendem Ton und bandbegrenztem Rauschmaterial; insbesondere „granular“/„hallig“, Bedienbarkeit des Peak-Band-Editors und Parameterübergänge beurteilen. Versionen, Audiointerface, Samplerate, Puffer, Buildrevision und Material protokollieren.
+- **Manuell:** Ein qualitativer Windows-11-/Ableton-12-Hörtest wurde berichtet. Attack und Nutzen waren positiv; Verkürzung war zu schwach, Tone teilweise granular und Noise hallig. Für einen formalen Nachweis die fehlenden Build-, Versions-, Audio-, Samplerate-, Puffer- und Materialdaten bei der nächsten Wiederholung dokumentieren und „granular“/„hallig“ gezielt vergleichen.
 
 ## Freigaben
 

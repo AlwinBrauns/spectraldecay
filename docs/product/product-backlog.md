@@ -1,30 +1,50 @@
 # Produkt-Backlog: Spectral Decay
 
-Status: Entwurf auf Grundlage der Produktvision und des Interviews vom
-15. November 2026. Die Reihenfolge und der Zuschnitt sind Vorschläge, keine
-Produktfreigabe. Prototyp 1 ist unter [prototyp/eins](../../prototyp/eins/)
+Status: Entwurf auf Grundlage der Produktvision und der Interviews vom
+15. und 20. November 2026. Die Reihenfolge und der Zuschnitt sind Vorschläge,
+keine Produktfreigabe. Prototyp 1 ist unter [prototyp/eins](../../prototyp/eins/)
 archiviert; im Hauptbaum ist Prototyp 2 mit bipolarem EQ-Peak-Band,
 stufenlosem Tone/Noise-Regler und eigenem Editor implementiert. Linux-x86-64
 Build und 3/3 CTest-Programme sind belegt. Messwerte und offene Grenzen stehen
 im [Prüfbericht Prototyp 2](../verification/peak-band-prototype-2.md).
-Windows-/Ableton-Hörtest und numerische Produkt-Abnahmetoleranzen bleiben
+P2 wurde in Ableton Live 12 unter Windows 11 qualitativ als praktisch
+interessant beurteilt; Versions- und Messdetails sind nicht dokumentiert.
+Die formale Host-Abnahme und numerische Produkt-Abnahmetoleranzen bleiben
 offen; der Prototyp schließt daher keine Produktanforderung ab.
+
+## Nächster abgestimmter Schritt: Prototyp 3
+
+Der aktuelle Umsetzungsplan steht in der
+[P3-Spec „Zwei Peak-Bänder mit stärkerer Verkürzung“](../specs/prototyp-drei-zwei-peak-baender.md).
+Die nächste Version untersucht zwei unabhängige Peak-Bänder mit je eigenem
+Tone/Noise-Regler. Die Priorität ist:
+
+1. den Attack beim Verkürzen erhalten;
+2. deutlich mehr negative Wirkung als beim bisherigen `-5` ermöglichen;
+3. granulare, hallige und echoartige Artefakte reduzieren.
+
+Prototyp 2 wird vor tiefgreifenden Änderungen als reproduzierbarer Lernstand
+archiviert. Klassische Low-/High-Pass- oder Randbänder, ein voller
+Mehrpunkt-Editor, Dry/Wet, Bypass und neue Abhängigkeiten gehören nicht zu P3.
 
 ## Aktueller Umsetzungsstand
 
 | Eintrag | Belegter Stand | Noch offen |
 | --- | --- | --- |
 | PB-01 | JUCE 9.0.5 und PFFFT v1.3.0 sind im Build fixiert; Lizenztexte und Inventar liegen vor. | Rechteinhaber, abschließende Lizenz-/Distributionsprüfung und Produktarchitektur. |
-| PB-02 | Neutraler STFT-Pfad, 2048 Samples gemeldete/gemessene Latenz; Linux-Build und 3/3 CTest-Programme erfolgreich. | Numerische Produkt-Abnahmegrenzen sowie Windows-/Ableton-Nachweis. |
-| PB-03 | Prototyp 2 implementiert bipolare Verkürzung mit Onset-Schutz; Offline-Messung zeigt deutlich reduzierte Nachklangenergie bei weitgehend erhaltenem Onset. | Windows-/Ableton-Hörnachweis und numerische Abnahmetoleranzen. |
+| PB-02 | Neutraler STFT-Pfad, 2048 Samples gemeldete/gemessene Latenz; Linux-Build und 3/3 CTest-Programme erfolgreich. | Numerische Produkt-Abnahmegrenzen und protokollierte Windows-/Ableton-Messung. |
+| PB-03 | Prototyp 2 implementiert bipolare Verkürzung mit Onset-Schutz; Offline-Messung zeigt deutlich reduzierte Nachklangenergie bei weitgehend erhaltenem Onset. Qualitativ wurde der Attack als gut erhalten, die maximale Verkürzung aber als zu schwach berichtet. | Protokollierter Windows-/Ableton-Vergleich und numerische Abnahmetoleranzen. |
 | PB-04 | Prototyp 2 implementiert Peak-Band-Verlängerung mit tonal/stochastischer Synthese, Morph und begrenztem Sample-Peak-Schutz; siehe [Prüfbericht](../verification/peak-band-prototype-2.md). | Hörqualität, offene Klangtoleranzen und True-Peak-Nachweis. |
-| PB-05 | Eigener Peak-Band-Editor mit ziehbarem Punkt und vier gekoppelten Reglern für Prototyp 2. | Windows-/Ableton-Bediennachweis; langfristiger Mehrpunkt-Editor bleibt Produktziel. |
+| PB-05 | Eigener Peak-Band-Editor mit ziehbarem Punkt und vier gekoppelten Reglern für Prototyp 2. Im informellen Ableton-Test gab es keine auffälligen Bedienungsprobleme. | Protokollierter Bediennachweis; langfristiger Mehrpunkt-Editor bleibt Produktziel. |
 | PB-06 | Mono- und Stereo-Layouts sind implementiert und in den Linux-Tests enthalten. | Produktqualität und Stabilität des Stereobilds unter Bearbeitung sind nicht abgenommen. |
 | PB-07 | Kein eigener Bypass und keine Dry/Wet-Mischung. | Latenzkompensierte Mischung, Bypass und Übergänge. |
 | PB-08 | P2-Offline-Test weist exakte 2,0-s-Ausgabegrenze und Sample-Peak-Ceiling `max(tailOutputCeiling, |dry|)` nach. | Kein True-Peak-Nachweis; Aktivitätsbezug und Abnahmegrenzen offen. |
-| PB-09 | Linux-Build, Offline-, Processor- und geladener VST3-Modultest erfolgreich; Einzelheiten im [P2-Prüfbericht](../verification/peak-band-prototype-2.md). | Windows-/Ableton- und Hörtest; vollständiger Echtzeitnachweis für den JUCE-VST3-Gesamtpfad fehlt. |
+| PB-09 | Linux-Build, Offline-, Processor- und geladener VST3-Modultest erfolgreich; informeller Ableton-12-/Windows-11-Hörtest liegt vor. Einzelheiten im [P2-Prüfbericht](../verification/peak-band-prototype-2.md). | Reproduzierbares Host-/Hörprotokoll; vollständiger Echtzeitnachweis für den JUCE-VST3-Gesamtpfad fehlt. |
+| P3-01 | P2 wurde unter Ableton Live 12/Windows 11 qualitativ als interessant beurteilt; Snare-Body-Verlängerung, Vocals und Automation sind bestätigte Anwendungsfälle. | P2-Quellstand archivieren; formales Hörprotokoll bleibt nachzuvollziehen. |
+| P3-02 | Der negative Bereich ist bei erhaltenem Attack als zu schwach zurückgemeldet worden. | Stärkere zeitabhängige Verkürzung gegen P2 `-5` messen und hören. |
+| P3-03 | Zwei Peak-Bänder und pro Band eigener Tone/Noise-Regler sind für P3 freigegeben. | DSP, Parameter, Zustand und kontextnaher Editor für zwei Bänder. |
 
-Der [neue Prüfbericht Prototyp 2](../verification/peak-band-prototype-2.md)
+Der [Prüfbericht Prototyp 2](../verification/peak-band-prototype-2.md)
 dokumentiert aktuelle Umsetzung, Linux-Messwerte und offene Grenzen. Der
 [neutrale Prüfbericht](../verification/neutral-prototype.md) und der
 [Tail-Prüfbericht zu P1](../verification/tail-prototype.md) bleiben als

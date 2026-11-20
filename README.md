@@ -52,9 +52,10 @@ fällt. Die 2-s-Grenze, das Sample-Peak-Ceiling und eine stufenlose Tone/Noise-
 Bewegung wurden ebenfalls offline gemessen.
 
 Das sind Messbeispiele und technische Prüfungen, **keine Abnahme offener
-numerischer Klangtoleranzen**. Windows-/Ableton-Build und Hörtest von
-Prototyp 2 stehen aus; Callback-Zeiten sind Stichproben, kein
-Echtzeit-/Worst-Case-Nachweis. JUCE 9.0.5 nimmt im VST3-Wrapper vor dem
+numerischer Klangtoleranzen**. Prototyp 2 wurde qualitativ in Ableton Live 12
+unter Windows 11 erprobt; ein reproduzierbares Windows-/Ableton-Protokoll
+steht aus. Callback-Zeiten sind Stichproben, kein Echtzeit-/Worst-Case-
+Nachweis. JUCE 9.0.5 nimmt im VST3-Wrapper vor dem
 Callback einen Lock. Vollständige Messbedingungen, Werte und Grenzen:
 [Prüfbericht Prototyp 2](docs/verification/peak-band-prototype-2.md).
 Der berichtete Windows-/Ableton-Höreindruck von Prototyp 1 ist separat im
@@ -137,6 +138,8 @@ VST3-SDK und PFFFT haben getrennte Lizenzbedingungen; siehe
 [Drittanbieterinventar](THIRD_PARTY_NOTICES.md).
 
 Es fehlt ein vollständiger Echtzeitnachweis, insbesondere für den JUCE-VST3-
-Gesamtpfad mit dessen Wrapper-Lock. Windows-/Ableton-Hörtest von Prototyp 2,
-True-Peak-Prüfung, verbindliche numerische Neutralitäts-/Klangtoleranzen und
-Produktfreigabe bleiben offen.
+Gesamtpfad mit dessen Wrapper-Lock. Der P2-Hörtest ist qualitativ, aber noch
+nicht reproduzierbar protokolliert. True-Peak-Prüfung, verbindliche numerische
+Neutralitäts-/Klangtoleranzen und Produktfreigabe bleiben offen. Der
+abgestimmte nächste Schritt ist die
+[P3-Spec](docs/specs/prototyp-drei-zwei-peak-baender.md).

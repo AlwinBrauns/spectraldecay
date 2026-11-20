@@ -1,9 +1,10 @@
 # Prototyp 2: Bipolares EQ-Peak-Band – Prüfbericht
 
-Stand: 2026-11-15. **Prototyp 2 ist implementiert; Linux-x86-64-Build und
-3/3 CTest-Programme sind belegt. Windows-/Ableton-Hörtest und numerische
-Produkt-Abnahmetoleranzen bleiben offen.** Der Bericht dokumentiert einen
-technischen Versuch, keine Produktfreigabe.
+Stand: 2026-11-20. **Prototyp 2 ist implementiert; Linux-x86-64-Build und
+3/3 CTest-Programme sind belegt. Ein informeller Ableton-Live-12-Test unter
+Windows 11 liegt als qualitative Rückmeldung vor. Ein reproduzierbares
+Hostprotokoll und numerische Produkt-Abnahmetoleranzen bleiben offen.** Der
+Bericht dokumentiert einen technischen Versuch, keine Produktfreigabe.
 
 ## Überblick und Archivbezug
 
@@ -85,15 +86,17 @@ beschlossener Grenzwerte.
 | --- | --- |
 | `ctest --test-dir build --output-on-failure` | **3/3 bestanden**: `neutral_offline`, `neutral_processor`, `neutral_vst3_host` (Linux x86-64) |
 | Offline-Messwerte | CSV mit 300 `MEASUREMENT_ONLY`-Zeilen; Rohwerte und Testbedingungen siehe oben/verlinkte CSV |
-| Windows-x86-64-Build, Ableton Live und P2-Hörtest | **Nicht ausgeführt** |
+| Windows-x86-64-Build und P2-Hörtest | **Qualitativ in Ableton 12/Windows 11 erprobt; Buildrevision, Umgebung und Testdaten nicht vollständig protokolliert** |
 | Verbindliche numerische Neutralitäts-, Klang-, Artefakt-, CPU- und True-Peak-Toleranzen | **Offen** |
 
 JUCE 9.0.5 nimmt im VST3-Wrapper vor dem eigenen Callback einen Callback-Lock.
 Das bleibt ein dokumentiertes Echtzeitrisiko; die Linux-Tests sind kein
 vollständiger Echtzeitnachweis.
 
-Nächster Schritt: aktuellen P2-Build unter Windows/Ableton erproben und
-Hörbedingungen protokollieren. Gezielte Hörfragen: „Verkürzt `< 0` den
-Ausklang ohne den Attack zu zerstören?“ und „Klingt Tone weniger granular und
-Noise weniger hallig?“ Produktverantwortung muss anschließend die offenen
-numerischen Abnahmetoleranzen entscheiden.
+Die qualitative Ableton-Rückmeldung bestätigt den praktischen Nutzen für
+Snare-Body, Vocals und Automation. Der Attack blieb beim Verkürzen gut; die
+maximale negative Wirkung reichte häufig nicht aus. Tone war passender, aber
+noch nicht ausreichend klar; Noise blieb zu hallig und gelegentlich entstanden
+Echo-/Granularartefakte. Der nächste Schritt ist der [Prototyp-3-Arbeitsauftrag](../specs/prototyp-drei-zwei-peak-baender.md):
+zwei unabhängige Bänder, stärkere attackschonende Verkürzung und ein
+P2/P3-Vergleich mit protokollierter Windows-/Ableton-Umgebung.

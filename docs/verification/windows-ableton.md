@@ -1,13 +1,34 @@
 # Windows-x86-64- und Ableton-Live-12-Test
 
-**Status (Stand 2026-11-15):** Für Prototyp 1 liegt der berichtete
+**Status (Stand 2026-11-20):** Für Prototyp 1 liegt der berichtete
 Windows-/Ableton-Hörbefund unten vor; der Quellstand ist unter
 [prototyp/eins](../../prototyp/eins/) archiviert. Prototyp 2 ist inzwischen
-implementiert und unter Linux technisch geprüft. Windows-x86-64-Build,
-Ableton-Live-12-Test und Hörtest von P2 stehen noch aus; formale Messreihen,
-Quellrevision, Versionen, Audiointerface, Samplerate, Puffer, Buslayout und
-Testmaterial sind dafür zu protokollieren. Linux-Prüfungen ersetzen diese
-Nachweise nicht. Messwerte und offene Grenzen: [Prüfbericht Prototyp 2](peak-band-prototype-2.md).
+implementiert, unter Linux technisch geprüft und qualitativ in Ableton Live 12
+unter Windows 11 erprobt. Formale Messreihen, Quellrevision, Versionen,
+Audiointerface, Samplerate, Puffer, Buslayout und Testmaterial sind noch zu
+rekonstruieren beziehungsweise beim nächsten Test vollständig zu
+protokollieren. Linux-Prüfungen und der informelle Hörbefund ersetzen keine
+formale Host-Abnahme. Messwerte und offene Grenzen:
+[Prüfbericht Prototyp 2](peak-band-prototype-2.md).
+
+## Berichteter Prototyp-2-Hörbefund
+
+Der Produktverantwortliche berichtete am 2026-11-20:
+
+1. Der Attack beim Verkürzen blieb klanglich gut erhalten.
+2. Die maximale negative Wirkung war häufig noch nicht stark genug.
+3. Eine kleine Q-Konfiguration konnte den Body einer Snare sinnvoll verlängern.
+4. Vocal-Cleaning und Automation waren praktisch interessante Anwendungen.
+5. Tone war verbessert, aber noch nicht ausreichend klar; teilweise blieb er
+   granular.
+6. Noise war weiterhin etwas hallig; gelegentlich entstanden Echo- oder
+   Granularartefakte.
+7. Zwei Peak-Bänder mit Tone/Noise pro Band sind der gewünschte nächste
+   Versuch.
+
+Dies sind berichtete qualitative Beobachtungen. Exakte Testsignale, Versionen,
+Buildrevision und Einstellungen sind unbekannt. Folgerung und konkreter Plan:
+[Spec Prototyp 3](../specs/prototyp-drei-zwei-peak-baender.md).
 
 ## Berichteter Prototyp-1-Hoerbefund
 

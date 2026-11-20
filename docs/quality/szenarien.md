@@ -13,9 +13,10 @@ Prototyps festgelegt.
 bipolarem Peak-Band und stufenlosem Tone/Noise ist implementiert und unter
 Linux-x86-64 mit 3/3 CTest-Programmen geprüft. Messwerte und offene
 Toleranzen: [Prüfbericht Prototyp 2](../verification/peak-band-prototype-2.md).
-Windows-/Ableton-Hörtest und numerische Produkt-Abnahmegrenzen sind offen;
-die unten dokumentierten Szenarien bleiben daher Produktziele, nicht pauschal
-abgenommene Kriterien.
+Ein qualitativer Ableton-12-/Windows-11-Hörtest von P2 liegt vor, aber ohne
+vollständiges Umgebungs-/Materialprotokoll. Formale Host-Abnahme und
+numerische Produkt-Abnahmegrenzen bleiben offen; die unten dokumentierten
+Szenarien bleiben daher Produktziele, nicht pauschal abgenommene Kriterien.
 
 ## QS-01 – Neutraler Durchlauf
 
@@ -113,11 +114,11 @@ für den gesamten VST3-Audiopfad damit nicht erfüllt; siehe
 | --- | --- |
 | ID / Qualitätsmerkmal | QS-07 / Funktionale Eignung und Audioqualität |
 | Auslöser | Änderung von `bandDecay` über negative Werte, 0 und positive Werte |
-| Umgebung | Offline-DSP-Test; danach Windows/Ableton-Hörtest von Prototyp 2. Samplerate, Blockgröße, Kanallayout und Testmaterial festzulegen. |
+| Umgebung | Offline-DSP-Test und qualitativer P2-Hörtest in Ableton 12/Windows 11; Samplerate, Blockgröße, Kanallayout und Testmaterial für die formale Wiederholung festzulegen. |
 | Artefakt | Bipolare zeitliche Bearbeitung im Peak-Band |
 | Erwartete Reaktion | `bandDecay` in `[-5,+5]`: negative Werte verkürzen den Ausklang im Band, 0 ist exakt neutral, positive Werte verlängern ihn. Negative Werte sollen Transienten möglichst erhalten. |
 | Messgröße | Latenzkompensierte Differenz zum neutralen Referenzpfad; zeitlicher Zielband-Energieverlauf/Abklingmaß; Transientenpegel; Tail-Dauer und Peak. Messfenster und Verfahren offen. |
-| Zielwert | Parameterbereich und Richtungen vorgegeben; neutrale Gleichheit und numerische Mindestwirkung/-toleranzen offen – nach Prototyp festzulegen. |
+| Zielwert | Parameterbereich und Richtungen vorgegeben. P2-Verkürzung wurde bei erhaltenem Attack als zu schwach berichtet; zusätzlicher negativer Bereich wird in P3 untersucht. Neutrale Gleichheit und numerische Mindestwirkung/-toleranzen bleiben offen. |
 | Priorität / Risiko | Hoch: bipolarer zeitlicher Eingriff ist eine Kernfunktion; eine statische Dämpfung wäre keine Verkürzung. |
 | Prüfung | Deterministischer Kick-/Transienten-Test und abklingender Ton bei negativen, neutralen und positiven Einstellungen; Messwerte berichten und Windows/Ableton gegenhören. Kriterien: [Spec Prototyp 2](../specs/prototyp-zwei-peak-band.md). |
 

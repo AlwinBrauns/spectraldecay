@@ -58,9 +58,12 @@ Low/High-Grenzen; er belegt nicht die Klangqualität der gewünschten
 - **Prototyp-2-Umsetzung:** Option B ist im Hauptbaum implementiert und
   unter Linux technisch verifiziert; Messwerte, Testumfang und Grenzen sind
   im [Prüfbericht Prototyp 2](../verification/peak-band-prototype-2.md)
-  dokumentiert. Windows-/Ableton-Hörtest und numerische
-  Abnahmetoleranzen stehen aus. Der ADR-Status bleibt daher bewusst
-  **vorgeschlagen**; die technische Umsetzung ist keine Produktentscheidung.
+  dokumentiert. Ein qualitativer Ableton-12-/Windows-11-Hörtest ergab
+  praktischen Nutzen, aber zu schwache maximale Verkürzung sowie verbliebene
+  Tone/Noise-Artefakte. Ein formales Hostprotokoll und numerische
+  Abnahmetoleranzen stehen weiterhin aus. Der ADR-Status bleibt daher bewusst
+  **vorgeschlagen**; technische Umsetzung und informeller Hörbefund sind keine
+  Produktentscheidung.
 
 ### Muss-Anforderungen für den Versuch
 
@@ -213,10 +216,12 @@ Numerische Abnahmeschwellen bleiben ausdrücklich offen.
   anschließend im Windows-/Ableton-Prototyp-2-Test; Messwerte ohne
   beschlossene Grenzen nur berichten.
 - **Ergänzende Evidenz:** Der oben beschriebene Versuch wurde implementiert
-  und unter Linux technisch geprüft. Das ersetzt weder den ausstehenden
-  Windows-/Ableton-Hörtest noch die Entscheidung über offene numerische
-  Kriterien; siehe [Prüfbericht Prototyp 2](../verification/peak-band-prototype-2.md).
-- **Folgearbeit:** DSP-Spec, Testsignale und Windows-/Ableton-Testplan
-  abstimmen. Neue Abhängigkeiten oder Lizenzänderungen sind nicht Teil
-  dieser Empfehlung; falls später vorgeschlagen, separat mit Folgen
-  beschreiben und freigeben.
+  und unter Linux technisch geprüft sowie qualitativ in Ableton 12 unter
+  Windows 11 erprobt. Das ersetzt weder ein reproduzierbares Hostprotokoll
+  noch die Entscheidung über offene numerische Kriterien; siehe
+  [Prüfbericht Prototyp 2](../verification/peak-band-prototype-2.md).
+- **Folgearbeit:** Die abgestimmte [P3-Spec](../specs/prototyp-drei-zwei-peak-baender.md)
+  erweitert den Ansatz auf zwei Bänder und untersucht stärkere, attackschonende
+  Verkürzung. Neue Abhängigkeiten oder Lizenzänderungen sind nicht Teil dieser
+  Empfehlung; falls später vorgeschlagen, sind sie separat zu beschreiben
+  und freizugeben.
